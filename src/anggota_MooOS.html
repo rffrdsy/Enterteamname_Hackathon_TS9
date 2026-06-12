@@ -179,45 +179,76 @@
         'bg-teal-50 text-teal-700',
         'bg-rose-50 text-rose-700',
       ];
-
-      function buildRows(members) {
+      function buildRowsPenitip(members) {
         if (members.length === 0) {
           return `<tr><td colspan="6" class="p-8 text-center text-sm text-gray-400">Tidak ada data anggota.</td></tr>`;
         }
         return members.map((m, i) => {
           const initials = m.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
           const avatarCls = AVATAR_COLORS[i % AVATAR_COLORS.length];
-          const isPJ = m.role === 'Penanggungjawab Ternak';
-          const roleBadge = isPJ
-            ? `<span class="text-xs text-gray-400">Penanggungjawab</span>`
-            : `<span class="text-xs text-gray-400">Penitip Ternak</span>`;
-          const barnBadge = isPJ && m.barn
-            ? `<span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Kandang ${m.barn}</span>`
-            : '';
-          const cowBadge = isPJ
-            ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-                ${m.cow_count} sapi
-              </span>`
-            : `<span class="text-xs text-gray-400">—</span>`;
           const mbrid = String(m.id).padStart(3, '0');
-
+          const maskedNik = m.nik && m.nik.length >= 10
+            ? m.nik.substring(0, 4) + '••••••••' + m.nik.substring(m.nik.length - 4)
+            : (m.nik ? '••••••••' : '—');
+          const maskedPhone = m.phone && m.phone.length >= 8
+            ? m.phone.substring(0, 4) + '••••' + m.phone.substring(m.phone.length - 4)
+            : (m.phone ? '••••••••' : '—');
           return `
-            <tr class="hover:bg-gray-50/50 transition-colors">
+            <tr onclick="window.location.href='detail_anggota_MooOS.html?id=${m.id}'" class="hover:bg-gray-50/50 transition-colors cursor-pointer">
               <td class="p-4 text-sm font-mono text-gray-500">MBR-${mbrid}</td>
               <td class="p-4">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-full ${avatarCls} flex items-center justify-center font-bold text-sm shrink-0">${initials}</div>
                   <div>
                     <span class="block text-sm font-medium text-slate-800">${m.name}</span>
-                    <div class="flex items-center gap-1">${roleBadge}${barnBadge}</div>
+                    <span class="text-xs text-gray-400">Penitip Ternak</span>
                   </div>
                 </div>
               </td>
-              <td class="p-4 text-sm font-mono text-gray-600">${m.nik || '—'}</td>
-              <td class="p-4 text-sm text-gray-600">${m.phone || '—'}</td>
+              <td class="p-4 text-sm font-mono text-gray-600">${maskedNik}</td>
+              <td class="p-4 text-sm text-gray-600">${maskedPhone}</td>
               <td class="p-4 text-sm text-gray-600 max-w-[180px] truncate" title="${m.alamat || ''}">${m.alamat || '—'}</td>
-              <td class="p-4 text-right">${cowBadge}</td>
+              <td class="p-4 text-right">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">${m.cow_count} sapi</span>
+              </td>
+            </tr>`;
+        }).join('');
+      }
+
+      function buildRowsPJ(pjs) {
+        if (pjs.length === 0) {
+          return `<tr><td colspan="6" class="p-8 text-center text-sm text-gray-400">Tidak ada data penanggungjawab.</td></tr>`;
+        }
+        return pjs.map((m, i) => {
+          const initials = m.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+          const pjid = String(m.id).padStart(3, '0');
+          const barnBadge = m.barn
+            ? `<span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Kandang ${m.barn}</span>`
+            : '';
+          const maskedNik = m.nik && m.nik.length >= 10
+            ? m.nik.substring(0, 4) + '••••••••' + m.nik.substring(m.nik.length - 4)
+            : (m.nik ? '••••••••' : '—');
+          const maskedPhone = m.phone && m.phone.length >= 8
+            ? m.phone.substring(0, 4) + '••••' + m.phone.substring(m.phone.length - 4)
+            : (m.phone ? '••••••••' : '—');
+          return `
+            <tr onclick="window.location.href='detail_pj_MooOS.html?id=${m.id}'" class="hover:bg-gray-50/50 transition-colors cursor-pointer">
+              <td class="p-4 text-sm font-mono text-blue-600 font-semibold">PJ-${pjid}</td>
+              <td class="p-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">${initials}</div>
+                  <div>
+                    <span class="block text-sm font-medium text-slate-800">${m.name}</span>
+                    <div class="flex items-center gap-1"><span class="text-xs text-gray-400">Penanggungjawab</span>${barnBadge}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="p-4 text-sm font-mono text-gray-600">${maskedNik}</td>
+              <td class="p-4 text-sm text-gray-600">${maskedPhone}</td>
+              <td class="p-4 text-sm text-gray-600 max-w-[180px] truncate" title="${m.alamat || ''}">${m.alamat || '—'}</td>
+              <td class="p-4 text-right">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">${m.cow_count} sapi di kandang</span>
+              </td>
             </tr>`;
         }).join('');
       }
@@ -242,31 +273,28 @@
         setLoading('tbody-pj', 'count-pj');
 
         try {
-          const res = await fetch(`${API}/members`);
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const all = await res.json();
+          const [resP, resPJ] = await Promise.all([
+            fetch(`${API}/members`),
+            fetch(`${API}/penanggungjawab`)
+          ]);
+          if (!resP.ok) throw new Error('HTTP ' + resP.status);
+          const penitip = await resP.json();
+          const pj = resPJ.ok ? await resPJ.json() : [];
 
-          const penitip = all.filter(m => m.role !== 'Penanggungjawab Ternak');
-          const pj = all.filter(m => m.role === 'Penanggungjawab Ternak');
+          document.getElementById('tbody-semua').innerHTML = buildRowsPenitip(penitip) + buildRowsPJ(pj);
+          document.getElementById('tbody-penitip').innerHTML = buildRowsPenitip(penitip);
+          document.getElementById('tbody-pj').innerHTML = buildRowsPJ(pj);
 
-          document.getElementById('tbody-semua').innerHTML = buildRows(all);
-          document.getElementById('tbody-penitip').innerHTML = buildRows(penitip);
-          document.getElementById('tbody-pj').innerHTML = buildRows(pj);
-
-          document.getElementById('count-semua').textContent = `Menampilkan ${all.length} anggota`;
+          const total = penitip.length + pj.length;
+          document.getElementById('count-semua').textContent = `Menampilkan ${total} anggota`;
           document.getElementById('count-penitip').textContent = `Menampilkan ${penitip.length} anggota`;
-          document.getElementById('count-pj').textContent = `Menampilkan ${pj.length} anggota`;
-
-          document.getElementById('tab-count-semua').textContent = all.length;
+          document.getElementById('count-pj').textContent = `Menampilkan ${pj.length} penanggungjawab`;
+          document.getElementById('tab-count-semua').textContent = total;
 
         } catch (err) {
           const errMsg = `<tr><td colspan="6" class="p-8 text-center text-sm text-red-500">⚠️ Gagal memuat data: ${err.message}. Pastikan backend berjalan di port 8000.</td></tr>`;
-          document.getElementById('tbody-semua').innerHTML = errMsg;
-          document.getElementById('tbody-penitip').innerHTML = errMsg;
-          document.getElementById('tbody-pj').innerHTML = errMsg;
-          document.getElementById('count-semua').textContent = 'Error';
-          document.getElementById('count-penitip').textContent = 'Error';
-          document.getElementById('count-pj').textContent = 'Error';
+          ['tbody-semua','tbody-penitip','tbody-pj'].forEach(id => document.getElementById(id).innerHTML = errMsg);
+          ['count-semua','count-penitip','count-pj'].forEach(id => document.getElementById(id).textContent = 'Error');
         }
       }
 

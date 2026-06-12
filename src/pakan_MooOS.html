@@ -44,107 +44,394 @@
           <!-- 2. NAVIGASI TABS -->
           <div class="border-b border-gray-200">
             <nav class="-mb-px flex flex-wrap gap-6 text-sm font-medium" aria-label="Tabs">
-              <a href="#"
-                class="border-b-2 border-green-600 py-3.5 px-1 font-semibold text-green-700 flex items-center gap-2 transition-all">
+              <button id="tab-btn-rekomendasi" onclick="gantiTab('rekomendasi')"
+                class="tab-btn border-b-2 border-green-700 py-3.5 px-1 font-medium text-green-700 transition-all cursor-pointer">
                 Rekomendasi Order
-              </a>
-              <a href="#"
-                class="border-b-2 border-transparent py-3.5 px-1 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-all">
-                Beri Pakan
-              </a>
-              <a href="#"
-                class="border-b-2 border-transparent py-3.5 px-1 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-all">
-                Terima Order
-              </a>
-              <a href="#"
-                class="border-b-2 border-transparent py-3.5 px-1 text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-all">
+              </button>
+              <button id="tab-btn-total-pakan" onclick="gantiTab('total-pakan')"
+                class="tab-btn border-b-2 border-transparent py-3.5 px-1 text-gray-500 hover:text-gray-700 transition-all cursor-pointer">
+                Total Pakan
+              </button>
+              <button id="tab-btn-pembagian" onclick="gantiTab('pembagian')"
+                class="tab-btn border-b-2 border-transparent py-3.5 px-1 text-gray-500 hover:text-gray-700 transition-all cursor-pointer">
+                Pembagian Pakan
+              </button>
+              <button id="tab-btn-riwayat" onclick="gantiTab('riwayat')"
+                class="tab-btn border-b-2 border-transparent py-3.5 px-1 text-gray-500 hover:text-gray-700 transition-all cursor-pointer">
                 Riwayat Pakan
-              </a>
+              </button>
             </nav>
           </div>
 
-          <!-- 3. GRID KARTU METRIK (3 Kolom) -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Kartu 1 (Stok Pakan) -->
-            <div class="bg-white border border-gray-200 rounded-md p-6 flex flex-col justify-between">
-              <div>
-                <span class="block text-sm font-semibold text-gray-500">Stok Pakan Saat Ini</span>
-                <div class="flex items-baseline gap-1 mt-2">
-                  <span class="text-4xl font-bold text-slate-800">120</span>
-                  <span class="text-sm text-gray-500">kg</span>
-                </div>
-              </div>
-              <div class="mt-4">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                  Konsentrat
-                </span>
-              </div>
-            </div>
+          <!-- ── KONTEN TABS ────────────────────────────────────────────────── -->
 
-            <!-- Kartu 2 (Kebutuhan Harian) -->
-            <div class="bg-white border border-gray-200 rounded-md p-6 flex flex-col justify-between">
-              <div>
-                <span class="block text-sm font-semibold text-gray-500">Kebutuhan Harian</span>
-                <div class="flex items-baseline gap-1 mt-2">
-                  <span class="text-4xl font-bold text-slate-800">85</span>
-                  <span class="text-sm text-gray-500">kg/hari</span>
-                </div>
-              </div>
-              <div class="mt-4 text-xs font-semibold text-gray-400">
-                17 sapi x 5 kg
-              </div>
-            </div>
-
-            <!-- Kartu 3 (Estimasi Habis) -->
-            <div class="bg-white border border-gray-200 rounded-md p-6 flex flex-col justify-between">
-              <div>
-                <div class="flex justify-between items-start">
-                  <span class="block text-sm font-semibold text-gray-500">Estimasi Habis</span>
-                  <!-- Badge KRITIS -->
-                  <span
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs md:text-xs font-bold bg-red-600 text-white tracking-wide shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                      <line x1="12" x2="12" y1="9" y2="13" />
-                      <line x1="12" x2="12.01" y1="17" y2="17" />
+          <!-- Tab 1: Rekomendasi Order (Default ACTIVE) -->
+          <div id="konten-rekomendasi" class="block space-y-6">
+            <!-- Component Grafik -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 text-left">
+              <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div class="space-y-1">
+                  <h2 class="text-lg font-bold text-slate-800 tracking-tight">
+                    Tren Harga Pasaran Pakan (Konsentrat)
+                  </h2>
+                  <p class="text-sm text-gray-500 flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      class="text-gray-400 shrink-0">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
                     </svg>
-                    KRITIS
-                  </span>
-                </div>
-                <div class="flex items-baseline gap-1 mt-2">
-                  <span class="text-4xl font-bold text-red-600">1.4</span>
-                  <span class="text-sm font-semibold text-red-600">hari</span>
+                    Data terupdate setiap hari pada pukul 02:00 &ndash; 04:00 WIB
+                  </p>
                 </div>
               </div>
-              <div class="mt-4">
-                <!-- Empty placeholder spacing to align footer across cards -->
-                <div class="h-4"></div>
+              <div id="chart-harga-pakan" class="mt-6 min-h-[350px]"></div>
+            </div>
+
+            <!-- Component Info Harga & Peringatan -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+              <!-- Kiri - Card Harga (1 kolom) -->
+              <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 flex flex-col justify-center">
+                <span class="text-sm text-gray-500 font-medium">Harga Saat Ini</span>
+                <div class="flex items-baseline gap-1 mt-2">
+                  <span class="text-3xl md:text-4xl font-bold text-red-600">Rp 4.445</span>
+                  <span class="text-sm text-gray-500">/kg</span>
+                </div>
+                <span class="text-xs md:text-sm text-gray-400 mt-2">Harga normal pasaran: Rp 4.100/kg</span>
+              </div>
+
+              <!-- Kanan - Banner Peringatan (2 kolom) -->
+              <div class="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-6 flex flex-col justify-between">
+                <div class="flex items-start gap-4">
+                  <div
+                    class="w-10 h-10 rounded-full bg-red-100 text-red-600 border border-red-200 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-700" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div class="space-y-1">
+                    <h4 class="font-bold text-red-800 text-lg">Tunda Pembelian Pakan</h4>
+                    <p class="text-sm text-red-700 leading-relaxed">
+                      Harga konsentrat saat ini berada jauh di atas harga normal. Sistem menyarankan untuk menggunakan
+                      stok aman (safety stock) Anda terlebih dahulu dan menunda pembelian skala besar hingga harga
+                      kembali stabil.
+                    </p>
+                  </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                  <a href="#" id="btn-tetap-beli"
+                    class="text-xs md:text-sm font-semibold text-red-600 hover:text-red-800 hover:underline cursor-pointer">
+                    Tetap beli pakan
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- 4. BANNER PERINGATAN (Alert) -->
-          <div class="bg-red-50 border border-red-200 rounded-md p-5 flex items-start gap-4">
-            <!-- Icon i dalam lingkaran merah gelap -->
-            <div
-              class="w-6.5 h-6.5 rounded-full bg-red-100 text-red-800 border border-red-200 flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                class="text-red-800">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" x2="12" y1="16" y2="12" />
-                <line x1="12" x2="12.01" y1="8" y2="8" />
-              </svg>
+          <!-- Tab 2: Total Pakan -->
+          <div id="konten-total-pakan" class="hidden space-y-6">
+            <!-- 3. GRID KARTU METRIK (3 Kolom) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Kartu 1 (Stok Pakan) -->
+              <div class="bg-white border border-gray-200 rounded-md p-6 flex flex-col justify-between">
+                <div>
+                  <span class="block text-sm font-semibold text-gray-500">Stok Pakan Saat Ini</span>
+                  <div class="flex items-baseline gap-1 mt-2">
+                    <span class="text-4xl font-bold text-slate-800">120</span>
+                    <span class="text-sm text-gray-500">kg</span>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                    Konsentrat
+                  </span>
+                </div>
+              </div>
+
+              <!-- Kartu 2 (Kebutuhan Harian) -->
+              <div class="bg-white border border-gray-200 rounded-md p-6 flex flex-col justify-between">
+                <div>
+                  <span class="block text-sm font-semibold text-gray-500">Kebutuhan Harian</span>
+                  <div class="flex items-baseline gap-1 mt-2">
+                    <span class="text-4xl font-bold text-slate-800">85</span>
+                    <span class="text-sm text-gray-500">kg/hari</span>
+                  </div>
+                </div>
+                <div class="mt-4 text-xs font-semibold text-gray-400">
+                  17 sapi x 5 kg
+                </div>
+              </div>
+
+              <!-- Kartu 3 (Estimasi Habis) -->
+              <div class="bg-white border border-gray-200 rounded-md p-6 flex flex-col justify-between">
+                <div>
+                  <div class="flex justify-between items-start">
+                    <span class="block text-sm font-semibold text-gray-500">Estimasi Habis</span>
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs md:text-xs font-bold bg-red-600 text-white tracking-wide shadow-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                        <line x1="12" x2="12" y1="9" y2="13" />
+                        <line x1="12" x2="12.01" y1="17" y2="17" />
+                      </svg>
+                      KRITIS
+                    </span>
+                  </div>
+                  <div class="flex items-baseline gap-1 mt-2">
+                    <span class="text-4xl font-bold text-red-600">1.4</span>
+                    <span class="text-sm font-semibold text-red-600">hari</span>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <div class="h-4"></div>
+                </div>
+              </div>
             </div>
-            <div class="space-y-1">
-              <h4 class="font-bold text-red-900 text-base">
-                Sistem merekomendasikan order 475 kg segera
-              </h4>
-              <p class="text-sm text-red-700">
-                Perhitungan: kebutuhan 7 hari (595 kg) + safety stock (255 kg) - stok sisa (120 kg) = 475 kg
-              </p>
+
+            <!-- 4. BANNER PERINGATAN (Alert) -->
+            <div class="bg-red-50 border border-red-200 rounded-md p-5 flex items-start gap-4">
+              <div
+                class="w-6.5 h-6.5 rounded-full bg-red-100 text-red-800 border border-red-200 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-red-800">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" x2="12" y1="16" y2="12" />
+                  <line x1="12" x2="12.01" y1="8" y2="8" />
+                </svg>
+              </div>
+              <div class="space-y-1">
+                <h4 class="font-bold text-red-900 text-base text-left">
+                  Sistem merekomendasikan order 475 kg segera
+                </h4>
+                <p class="text-sm text-red-700 text-left">
+                  Perhitungan: kebutuhan 7 hari (595 kg) + safety stock (255 kg) - stok sisa (120 kg) = 475 kg
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Pembagian Pakan -->
+          <div id="konten-pembagian" class="hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+            <!-- Card Header -->
+            <div class="p-6 border-b border-gray-200 text-left">
+              <h3 class="text-lg md:text-xl font-bold text-slate-800 tracking-tight">Status Pemberian Pakan per Kandang
+              </h3>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-gray-200 bg-gray-50/50">
+                    <th
+                      class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      ID Kandang</th>
+                    <th
+                      class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      Nama Kandang</th>
+                    <th
+                      class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      Jumlah Pakan</th>
+                    <th
+                      class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      Supplier</th>
+                    <th
+                      class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-150">
+                  <!-- Baris 1: Sudah Diberikan -->
+                  <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-001</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang A - Laktasi</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">150 kg</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-100">
+                          TM
+                        </div>
+                        <span class="font-medium text-slate-700">KUD Tani Makmur</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                      <span
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 border border-green-200 text-green-700">
+                        Sudah Diberikan
+                      </span>
+                    </td>
+                  </tr>
+
+                  <!-- Baris 2: Sudah Diberikan -->
+                  <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-002</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang B - Kering</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">85 kg</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-8 h-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-xs shrink-0 border border-orange-100">
+                          PN
+                        </div>
+                        <span class="font-medium text-slate-700">CV Pakan Nusantara</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                      <span
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 border border-green-200 text-green-700">
+                        Sudah Diberikan
+                      </span>
+                    </td>
+                  </tr>
+
+                  <!-- Baris 3: Belum Diberikan -->
+                  <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-003</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang C - Pedet</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">60 kg</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs shrink-0 border border-purple-100">
+                          AS
+                        </div>
+                        <span class="font-medium text-slate-700">PT Agro Sentosa</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                      <span
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 border border-blue-200 text-blue-700">
+                        Belum Diberikan
+                      </span>
+                    </td>
+                  </tr>
+
+                  <!-- Baris 4: Belum Diberikan -->
+                  <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-004</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang D - Karantina</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">45 kg</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-100">
+                          TM
+                        </div>
+                        <span class="font-medium text-slate-700">KUD Tani Makmur</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                      <span
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 border border-blue-200 text-blue-700">
+                        Belum Diberikan
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab 4: Riwayat Pakan -->
+          <div id="konten-riwayat" class="hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+            <!-- Card Header -->
+            <div
+              class="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left">
+              <h3 class="text-lg font-bold text-slate-800 tracking-tight">Riwayat Pemberian Pakan</h3>
+
+              <!-- Header Actions -->
+              <div class="flex items-center gap-2">
+                <button type="button"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="text-gray-400">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                  </svg>
+                  Filter
+                </button>
+                <button type="button"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="text-gray-400">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                  Unduh
+                </button>
+              </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-gray-200 bg-gray-50/50">
+                    <th
+                      class="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      ID Kandang</th>
+                    <th
+                      class="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      Tanggal Pemberian</th>
+                    <th
+                      class="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      Nama Kandang</th>
+                    <th
+                      class="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-left border-b border-gray-200">
+                      Jumlah Pakan</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-150">
+                  <!-- Baris 1 -->
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-001</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">13 Jun 2026, 07:30 WIB</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang A - Laktasi</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">150 kg</td>
+                  </tr>
+
+                  <!-- Baris 2 -->
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-002</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">13 Jun 2026, 07:00 WIB</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang B - Kering</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">85 kg</td>
+                  </tr>
+
+                  <!-- Baris 3 -->
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-003</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">12 Jun 2026, 16:30 WIB</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang C - Pedet</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">60 kg</td>
+                  </tr>
+
+                  <!-- Baris 4 -->
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-004</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">12 Jun 2026, 16:00 WIB</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang D - Karantina</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">45 kg</td>
+                  </tr>
+
+                  <!-- Baris 5 -->
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-gray-600 font-medium">KND-001</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">12 Jun 2026, 07:30 WIB</td>
+                    <td class="px-6 py-4 text-sm font-bold text-slate-800">Kandang A - Laktasi</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">150 kg</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -154,6 +441,216 @@
     <!-- ===== Content Area End ===== -->
   </div>
   <!-- ===== Page Wrapper End ===== -->
+  <script>
+    // ── Dummy Data: Harga Konsentrat 90 Hari Terakhir ──────────────────────
+    const chartData = {
+      categories: [
+        '12 Mar', '17 Mar', '22 Mar', '27 Mar',
+        '01 Apr', '06 Apr', '11 Apr', '16 Apr', '21 Apr', '26 Apr',
+        '01 Mei', '06 Mei', '11 Mei', '16 Mei', '21 Mei', '26 Mei', '31 Mei',
+        '05 Jun', '10 Jun', '13 Jun'
+      ],
+      prices: [
+        4120, 4085, 4150, 4200,
+        4175, 4230, 4310, 4280, 4350, 4300,
+        4260, 4190, 4220, 4290, 4370, 4410, 4380,
+        4430, 4460, 4445
+      ]
+    };
+
+    // ── ApexCharts Config ──────────────────────────────────────────────────
+    const chartOptions = {
+      series: [{
+        name: 'Harga Konsentrat',
+        data: chartData.prices
+      }],
+      chart: {
+        type: 'line',
+        height: 350,
+        toolbar: { show: false },
+        zoom: { enabled: false },
+        fontFamily: 'inherit',
+        animations: {
+          enabled: true,
+          easing: 'easeinout',
+          speed: 600
+        }
+      },
+      colors: ['#43A55A'],
+      stroke: {
+        curve: 'smooth',
+        width: 3
+      },
+      markers: {
+        size: 4,
+        colors: ['#fff'],
+        strokeColors: '#43A55A',
+        strokeWidth: 2.5,
+        hover: { size: 6 }
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.50,
+          opacityTo: 0.50,
+          stops: [0, 100]
+        }
+      },
+      xaxis: {
+        categories: chartData.categories,
+        axisBorder: { show: false },
+        axisTicks: { show: false },
+        labels: {
+          style: { colors: '#9ca3af', fontSize: '12px' },
+          rotate: -30
+        },
+        tooltip: { enabled: false }
+      },
+      yaxis: {
+        min: 3900,
+        max: 4600,
+        tickAmount: 7,
+        labels: {
+          formatter: val => 'Rp ' + val.toLocaleString('id-ID'),
+          style: { colors: '#9ca3af', fontSize: '12px' }
+        }
+      },
+      grid: {
+        borderColor: '#f1f5f9',
+        strokeDashArray: 4,
+        yaxis: { lines: { show: true } },
+        xaxis: { lines: { show: false } }
+      },
+      tooltip: {
+        theme: 'light',
+        y: {
+          formatter: val => 'Rp ' + val.toLocaleString('id-ID') + ' / kg'
+        }
+      },
+      dataLabels: { enabled: false },
+      legend: { show: false }
+    };
+
+    // Global Tab Switch Logic
+    function gantiTab(tabId) {
+      // Hide all contents
+      const tabs = ['rekomendasi', 'total-pakan', 'pembagian', 'riwayat'];
+      tabs.forEach(t => {
+        const el = document.getElementById(`konten-${t}`);
+        if (el) {
+          el.classList.add('hidden');
+          el.classList.remove('block');
+        }
+      });
+
+      // Show selected content
+      const activeEl = document.getElementById(`konten-${tabId}`);
+      if (activeEl) {
+        activeEl.classList.remove('hidden');
+        activeEl.classList.add('block');
+      }
+
+      // Update button styling
+      const btns = {
+        'rekomendasi': document.getElementById('tab-btn-rekomendasi'),
+        'total-pakan': document.getElementById('tab-btn-total-pakan'),
+        'pembagian': document.getElementById('tab-btn-pembagian'),
+        'riwayat': document.getElementById('tab-btn-riwayat')
+      };
+
+      for (const k in btns) {
+        const btn = btns[k];
+        if (btn) {
+          if (k === tabId) {
+            btn.className = "tab-btn border-b-2 border-green-700 py-3.5 px-1 font-medium text-green-700 transition-all cursor-pointer";
+          } else {
+            btn.className = "tab-btn border-b-2 border-transparent py-3.5 px-1 text-gray-500 hover:text-gray-700 transition-all cursor-pointer";
+          }
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const chart = new ApexCharts(document.getElementById('chart-harga-pakan'), chartOptions);
+      chart.render();
+
+      // ── Modal Konfirmasi Harga Pembelian ──────────────────────────────────
+      const modal = document.getElementById('modal-konfirmasi-harga');
+      const btnOpen = document.getElementById('btn-tetap-beli');
+      const btnCancel = document.getElementById('btn-batal-beli');
+      const btnConfirm = document.getElementById('btn-lanjut-beli');
+
+      if (btnOpen && modal) {
+        btnOpen.addEventListener('click', (e) => {
+          e.preventDefault();
+          modal.classList.remove('hidden');
+        });
+      }
+
+      if (btnCancel && modal) {
+        btnCancel.addEventListener('click', () => {
+          modal.classList.add('hidden');
+        });
+      }
+
+      if (btnConfirm && modal) {
+        btnConfirm.addEventListener('click', () => {
+          modal.classList.add('hidden');
+          console.log('Mengarahkan ke form pembelian/pemilihan supplier...');
+          alert('Pembelian dilanjutkan: Mengarahkan ke form pembelian/pemilihan supplier...');
+        });
+      }
+
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- ===== MODAL KONFIRMASI HARGA ===== -->
+  <div id="modal-konfirmasi-harga"
+    class="hidden fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-lg shadow-2xl border border-gray-100 w-full max-w-sm p-6 text-center space-y-5">
+
+      <!-- Icon Peringatan Orange -->
+      <div class="flex justify-center">
+        <div class="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-500" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Judul & Deskripsi -->
+      <div class="space-y-2">
+        <h3 class="text-lg font-bold text-slate-800">Konfirmasi Pembelian</h3>
+        <p class="text-sm text-gray-500 leading-relaxed">
+          Apakah Anda yakin untuk melanjutkan pembelian pakan di harga tinggi (Rp 4.445/kg)?
+        </p>
+      </div>
+
+      <!-- Tombol Aksi -->
+      <div class="flex items-center gap-3 w-full pt-1">
+        <button id="btn-batal-beli" type="button"
+          class="w-1/2 inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none cursor-pointer">
+          Batal
+        </button>
+        <button id="btn-lanjut-beli" type="button"
+          class="w-1/2 inline-flex items-center justify-center rounded-lg bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-sm font-semibold transition-colors hover:opacity-90 focus:outline-none cursor-pointer shadow-sm">
+          Ya, Lanjutkan
+        </button>
+      </div>
+
+    </div>
+  </div>
+  <!-- ===== END MODAL ===== -->
 </body>
 
 </html>

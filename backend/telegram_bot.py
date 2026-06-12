@@ -130,6 +130,57 @@ Tekan tombol di bawah untuk konfirmasi sapi siap dijual.
 
 
 # =========================
+# DAILY KANDANG LOG (/lapor)
+# =========================
+
+from datetime import datetime
+
+@bot.message_handler(commands=['lapor'])
+def lapor_kandang(message):
+    telegram_id = message.from_user.id
+    
+    # Cari tahu ini kandang apa
+    barn = None
+    for b, t_id in BARN_TELEGRAM_IDS.items():
+        if t_id == telegram_id:
+            barn = b
+            break
+            
+    if not barn:
+        bot.send_message(message.chat.id, "🚫 Anda tidak terdaftar sebagai penanggungjawab kandang.")
+        return
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # Cek status pakan & susu hari ini
+    cursor.execute("SELECT id FROM daily_kandang_logs WHERE date = ? AND barn = ? AND type = 'PAKAN'", (today, barn))
+    pakan_log = cursor.fetchone()
+    
+    cursor.execute("SELECT id FROM daily_kandang_logs WHERE date = ? AND barn = ? AND type = 'SUSU'", (today, barn))
+    susu_log = cursor.fetchone()
+
+    markup = InlineKeyboardMarkup(row_width=1)
+    
+    if pakan_log:
+        markup.add(InlineKeyboardButton("↩️ Batal (Undo) Pakan", callback_data=f"undo_log_{pakan_log[0]}"))
+    else:
+        markup.add(InlineKeyboardButton("🌾 Selesai Beri Pakan", callback_data=f"lapor_pakan_{barn}"))
+        
+    if susu_log:
+        markup.add(InlineKeyboardButton("↩️ Batal (Undo) Susu", callback_data=f"undo_log_{susu_log[0]}"))
+    else:
+        markup.add(InlineKeyboardButton("🥛 Selesai Perah Susu", callback_data=f"lapor_susu_{barn}"))
+        
+    markup.add(InlineKeyboardButton("🩺 Lapor Sapi Sakit/Mati", callback_data=f"lapor_sakit_{barn}"))
+    
+    bot.send_message(
+        message.chat.id,
+        f"📝 *Laporan Harian Kandang {barn}*\nTanggal: {today}\n\nPilih laporan yang ingin disubmit:",
+        parse_mode="Markdown",
+        reply_markup=markup
+    )
+
+# =========================
 # BOT START
 # =========================
 
@@ -613,3 +664,119 @@ Sapi telah resmi terjual.
         )
 
         print(f"{po_id} REJECTED")
+
+    # ===============================
+    # LAPOR HARIAN KANDANG
+    # ===============================
+    elif call.data.startswith("lapor_pakan_") or call.data.startswith("lapor_susu_"):
+        parts = call.data.split("_")
+        lapor_type = parts[1] # pakan / susu
+        barn = parts[2]
+        telegram_id = call.from_user.id
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        cursor.execute(
+            "INSERT INTO daily_kandang_logs (date, barn, type, telegram_id) VALUES (?, ?, ?, ?)",
+            (today, barn, lapor_type.upper(), telegram_id)
+        )
+        conn.commit()
+        
+        bot.answer_callback_query(call.id, f"Laporan {lapor_type} disimpan!")
+        bot.edit_message_text(
+            f"✅ *{lapor_type.capitalize()}* Selesai dicatat.\n\n_Ketik /lapor lagi untuk melihat menu lainnya atau membatalkan._",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup()
+        )
+        
+    elif call.data.startswith("lapor_sakit_"):
+        barn = call.data.replace("lapor_sakit_", "")
+        
+        # Ambil daftar sapi di kandang tersebut
+        cursor.execute("SELECT cow_code FROM cows WHERE barn = ? AND status NOT IN ('SOLD', 'DEAD', 'REJECTED')", (barn,))
+        rows = cursor.fetchall()
+        
+        if not rows:
+            bot.answer_callback_query(call.id)
+            bot.send_message(call.message.chat.id, f"Tidak ada sapi aktif di Kandang {barn}.")
+            return
+            
+        markup = InlineKeyboardMarkup(row_width=2)
+        for row in rows:
+            markup.add(InlineKeyboardButton(f"Sapi {row[0]}", callback_data=f"sickselect_{row[0]}"))
+            
+        bot.answer_callback_query(call.id)
+        bot.send_message(
+            call.message.chat.id,
+            "Pilih sapi yang bermasalah:",
+            reply_markup=markup
+        )
+        
+    elif call.data.startswith("sickselect_"):
+        cow_code = call.data.replace("sickselect_", "")
+        markup = InlineKeyboardMarkup()
+        markup.add(
+            InlineKeyboardButton("🩺 Dilaporkan Sakit", callback_data=f"marksick_{cow_code}"),
+            InlineKeyboardButton("☠️ Dilaporkan Mati", callback_data=f"markdead_{cow_code}")
+        )
+        bot.answer_callback_query(call.id)
+        bot.send_message(
+            call.message.chat.id,
+            f"Kondisi sapi {cow_code}:",
+            reply_markup=markup
+        )
+        
+    elif call.data.startswith("marksick_"):
+        cow_code = call.data.replace("marksick_", "")
+        cursor.execute("UPDATE cows SET status = 'SICK' WHERE cow_code = ?", (cow_code,))
+        conn.commit()
+        
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("↩️ Batalkan (Undo)", callback_data=f"undo_sick_{cow_code}"))
+        
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, f"✅ Status sapi {cow_code} diubah menjadi SAKIT.", reply_markup=markup)
+        
+    elif call.data.startswith("markdead_"):
+        cow_code = call.data.replace("markdead_", "")
+        cursor.execute("UPDATE cows SET status = 'DEAD' WHERE cow_code = ?", (cow_code,))
+        conn.commit()
+        
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("↩️ Batalkan (Undo)", callback_data=f"undo_dead_{cow_code}"))
+
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, f"✅ Status sapi {cow_code} diubah menjadi MATI.", reply_markup=markup)
+        
+    # ===============================
+    # UNDO HANDLERS
+    # ===============================
+    elif call.data.startswith("undo_log_"):
+        log_id = call.data.replace("undo_log_", "")
+        cursor.execute("DELETE FROM daily_kandang_logs WHERE id = ?", (log_id,))
+        conn.commit()
+        
+        bot.answer_callback_query(call.id, "Laporan dibatalkan!")
+        bot.edit_message_text(
+            "🔄 *Laporan harian dibatalkan.*\n\n_Ketik /lapor lagi untuk melihat menu._",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup()
+        )
+
+    elif call.data.startswith("undo_sick_") or call.data.startswith("undo_dead_"):
+        parts = call.data.split("_")
+        cow_code = parts[2]
+        
+        cursor.execute("UPDATE cows SET status = 'AVAILABLE' WHERE cow_code = ?", (cow_code,))
+        conn.commit()
+        
+        bot.answer_callback_query(call.id, "Status dibatalkan!")
+        bot.edit_message_text(
+            f"🔄 Status sapi {cow_code} dikembalikan menjadi Normal (*AVAILABLE*).",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown"
+        )

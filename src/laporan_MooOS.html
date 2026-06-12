@@ -1,52 +1,1006 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
-    />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Laporan | MooOS - Manajemen Ternak</title>
-  </head>
-  <body
-    x-data="{ page: 'laporanMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
-    class="bg-gray-50 text-gray-800"
-  >
-    <!-- ===== Preloader Start ===== -->
-    <include src="./partials/preloader.html"></include>
-    <!-- ===== Preloader End ===== -->
 
-    <!-- ===== Page Wrapper Start ===== -->
-    <div class="flex h-screen overflow-hidden">
-      <!-- ===== Sidebar Start ===== -->
-      <include src="./partials/sidebar.html"></include>
-      <!-- ===== Sidebar End ===== -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta name="description"
+    content="Laporan dan analitik operasional MooOS — ringkasan ternak, pakan, produksi susu, keuangan, dan wawasan cerdas." />
+  <title>Laporan & Analisis | MooOS - Manajemen Ternak</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    /* Micro-animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.4); opacity: .7; }
+    }
+    .fade-up   { animation: fadeUp .45s ease both; }
+    .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
 
-      <!-- ===== Content Area Start ===== -->
-      <div
-        class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto"
-      >
-        <!-- Small Device Overlay Start -->
-        <include src="./partials/overlay.html" />
-        <!-- Small Device Overlay End -->
+    /* Staggered cards */
+    .fade-up:nth-child(1) { animation-delay: .05s; }
+    .fade-up:nth-child(2) { animation-delay: .10s; }
+    .fade-up:nth-child(3) { animation-delay: .15s; }
+    .fade-up:nth-child(4) { animation-delay: .20s; }
 
-        <!-- ===== Header Start ===== -->
-        <include src="./partials/header.html" />
-        <!-- ===== Header End ===== -->
+    /* Custom progress bar */
+    .progress-track { background:#f3f4f6; border-radius:9999px; height:6px; overflow:hidden; }
+    .progress-fill  { height:100%; border-radius:9999px; transition:width .8s cubic-bezier(.4,0,.2,1); }
 
-        <!-- ===== Main Content Start ===== -->
-        <main>
-          <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
-            <h1 class="text-2xl font-semibold text-gray-800 dark:text-white">
-              Laporan & Analisis
-            </h1>
+    /* Insight card hover */
+    .insight-card { transition: box-shadow .2s, transform .2s; }
+    .insight-card:hover { box-shadow:0 6px 20px rgba(0,0,0,.07); transform:translateY(-2px); }
+
+    /* Print helper */
+    @media print {
+      aside, header { display: none !important; }
+      .no-print    { display: none !important; }
+    }
+  </style>
+</head>
+
+<body
+  x-data="{ page: 'laporanMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+  class="bg-gray-50 text-gray-800">
+
+  <!-- ===== Preloader ===== -->
+  <include src="./partials/preloader.html"></include>
+
+  <!-- ===== Page Wrapper ===== -->
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- ===== Sidebar ===== -->
+    <include src="./partials/sidebar.html"></include>
+
+    <!-- ===== Content Area ===== -->
+    <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+      <include src="./partials/overlay.html" />
+      <include src="./partials/header.html" />
+
+      <!-- ===== Main ===== -->
+      <main>
+        <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-8">
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 0. PAGE HEADER                                        -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Laporan &amp; Analisis</h1>
+              <p class="text-sm text-gray-500 mt-1">
+                Pantau kinerja operasional, keuangan, dan produksi koperasi secara real-time
+              </p>
+            </div>
+            <div class="flex items-center gap-3 no-print">
+              <select id="periode-select"
+                class="rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-colors">
+                <option value="bulan-ini">Bulan Ini (Juni 2026)</option>
+                <option value="bulan-lalu">Bulan Lalu</option>
+                <option value="q1">Q1 2026</option>
+                <option value="tahun-ini">Tahun 2026</option>
+              </select>
+              <button onclick="window.print()"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect width="12" height="8" x="6" y="14" />
+                </svg>
+                Cetak
+              </button>
+            </div>
           </div>
-        </main>
-        <!-- ===== Main Content End ===== -->
-      </div>
-      <!-- ===== Content Area End ===== -->
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 1. OPERATIONAL SUMMARY CARDS                          -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <section aria-labelledby="section-ops">
+            <h2 id="section-ops" class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">
+              Ringkasan Operasional
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+              <!-- Ternak Aktif -->
+              <div class="fade-up bg-white border border-gray-100 rounded-xl p-5 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm font-semibold text-gray-500">Ternak Aktif</span>
+                  <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M5 9c0-3 3-5 7-5s7 2 7 5a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6z"/>
+                      <path d="M9 13v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2"/>
+                      <path d="M10 10h.01"/><path d="M14 10h.01"/>
+                    </svg>
+                  </div>
+                </div>
+                <p class="text-3xl font-bold text-slate-800" id="ops-ternak">—</p>
+                <p class="text-xs text-gray-400 mt-1">ekor sapi terdaftar aktif</p>
+                <div class="mt-4 flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></span>
+                  <span class="text-xs font-medium text-emerald-600" id="ops-ternak-sold">— terjual bulan ini</span>
+                </div>
+              </div>
+
+              <!-- Produksi Susu -->
+              <div class="fade-up bg-white border border-gray-100 rounded-xl p-5 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm font-semibold text-gray-500">Produksi Susu Bulan Ini</span>
+                  <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M8 2h8l1 6H7L8 2z"/><path d="M7 8c0 5 2 9 5 9s5-4 5-9"/>
+                      <path d="M5 8h14"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex items-baseline gap-1">
+                  <p class="text-3xl font-bold text-slate-800">9.400</p>
+                  <span class="text-sm font-semibold text-blue-500">L</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">dari 20 sapi perah aktif</p>
+                <div class="mt-4 flex items-center gap-1.5">
+                  <span class="text-xs font-medium text-blue-600">↑ 8% vs bulan lalu</span>
+                </div>
+              </div>
+
+              <!-- Konsumsi Pakan -->
+              <div class="fade-up bg-white border border-gray-100 rounded-xl p-5 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm font-semibold text-gray-500">Konsumsi Pakan Bulan Ini</span>
+                  <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22v-8"/>
+                      <path d="M12 14c-3.3 0-6-2.7-6-6 0-3.3 2.7-6 6-6s6 2.7 6 6c0 3.3-2.7 6-6 6z"/>
+                      <path d="M9 10l3-3 3 3"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex items-baseline gap-1">
+                  <p class="text-3xl font-bold text-slate-800" id="ops-pakan">—</p>
+                  <span class="text-sm font-semibold text-amber-500">kg</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">total konsumsi semua kandang</p>
+                <div class="mt-4 flex items-center gap-1.5">
+                  <span class="text-xs font-medium text-amber-600">↑ 12% vs minggu lalu</span>
+                </div>
+              </div>
+
+              <!-- Pendapatan -->
+              <div class="fade-up bg-white border border-gray-100 rounded-xl p-5 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm font-semibold text-gray-500">Pendapatan Bulan Ini</span>
+                  <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  </div>
+                </div>
+                <p class="text-3xl font-bold text-slate-800" id="ops-revenue">—</p>
+                <p class="text-xs text-gray-400 mt-1">gabungan semua sumber</p>
+                <div class="mt-4 flex items-center gap-1.5">
+                  <span class="text-xs font-medium text-purple-600">↑ 15% vs bulan lalu</span>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 2. FEED ANALYSIS                                      -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <section aria-labelledby="section-feed">
+            <h2 id="section-feed" class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">
+              Analisis Pakan
+            </h2>
+
+            <!-- Alert Kritis -->
+            <div id="feed-alert"
+              class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-amber-800">Rekomendasi Order Pakan</p>
+                <p class="text-xs text-amber-700 mt-0.5" id="feed-alert-msg">
+                  Stok diperkirakan habis dalam <strong>8 hari</strong>. Segera lakukan pembelian minimal
+                  <strong>475 kg</strong> untuk menjaga ketersediaan 14 hari ke depan.
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+              <!-- Konsumsi per Kategori (Bar chart) -->
+              <div class="lg:col-span-2 bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
+                <div class="flex items-center justify-between border-b border-gray-100 p-5">
+                  <div>
+                    <h3 class="text-sm font-semibold text-slate-800">Konsumsi Pakan per Kategori</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Perbandingan sapi potong vs sapi perah</p>
+                  </div>
+                  <div class="flex gap-3 text-xs font-medium text-gray-500">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>Potong</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-400"></span>Perah</span>
+                  </div>
+                </div>
+                <div class="p-5 relative w-full" style="height:240px;">
+                  <canvas id="feed-category-chart"></canvas>
+                </div>
+              </div>
+
+              <!-- Stok & Metrik -->
+              <div class="bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
+                <div class="border-b border-gray-100 p-5">
+                  <h3 class="text-sm font-semibold text-slate-800">Status Stok Pakan</h3>
+                </div>
+                <div class="p-5 space-y-5">
+                  <!-- Stok Tersisa -->
+                  <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                      <span class="text-xs font-semibold text-gray-500">Stok Tersisa</span>
+                      <span class="text-xs font-bold text-slate-700" id="feed-stok-label">120 kg</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill bg-amber-400" id="feed-stok-bar" style="width:20%"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">dari kapasitas 600 kg</p>
+                  </div>
+
+                  <!-- Konsumsi Harian -->
+                  <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3.5">
+                    <div>
+                      <p class="text-xs text-gray-500 font-medium">Konsumsi Harian</p>
+                      <p class="text-lg font-bold text-slate-800 mt-0.5">85 <span class="text-sm text-gray-400">kg/hari</span></p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-xs text-gray-500 font-medium">Estimasi Habis</p>
+                      <p class="text-lg font-bold text-red-500 mt-0.5">1.4 <span class="text-sm">hari</span></p>
+                    </div>
+                  </div>
+
+                  <!-- Rekomendasi Order -->
+                  <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3.5">
+                    <p class="text-xs font-bold text-emerald-800">Rekomendasi Order</p>
+                    <p class="text-2xl font-bold text-emerald-700 mt-1">475 <span class="text-sm">kg</span></p>
+                    <p class="text-xs text-emerald-600 mt-0.5">untuk kebutuhan 14 hari ke depan</p>
+                  </div>
+
+                  <!-- Breakdown Kandang -->
+                  <div class="space-y-2">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Per Kandang</p>
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs text-gray-600">Kandang A</span>
+                      <span class="text-xs font-semibold text-slate-700" id="feed-kandang-a">—</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs text-gray-600">Kandang B</span>
+                      <span class="text-xs font-semibold text-slate-700" id="feed-kandang-b">—</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 3. MILK PRODUCTION ANALYSIS                           -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <section aria-labelledby="section-milk">
+            <h2 id="section-milk" class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">
+              Analisis Produksi Susu
+            </h2>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+              <!-- Metrik Susu (1/3) -->
+              <div class="bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
+                <div class="border-b border-gray-100 p-5">
+                  <h3 class="text-sm font-semibold text-slate-800">Ringkasan Produksi</h3>
+                </div>
+                <div class="divide-y divide-gray-50">
+                  <div class="flex items-center justify-between p-4">
+                    <div>
+                      <p class="text-xs text-gray-500 font-medium">Produksi Hari Ini</p>
+                      <p class="text-2xl font-bold text-slate-800 mt-0.5">320 <span class="text-sm text-blue-500">L</span></p>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700">16 L/ekor</span>
+                  </div>
+                  <div class="flex items-center justify-between p-4">
+                    <div>
+                      <p class="text-xs text-gray-500 font-medium">Produksi Minggu Ini</p>
+                      <p class="text-2xl font-bold text-slate-800 mt-0.5">2.150 <span class="text-sm text-blue-500">L</span></p>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">↑ 5%</span>
+                  </div>
+                  <div class="flex items-center justify-between p-4">
+                    <div>
+                      <p class="text-xs text-gray-500 font-medium">Produksi Bulan Ini</p>
+                      <p class="text-2xl font-bold text-slate-800 mt-0.5">9.400 <span class="text-sm text-blue-500">L</span></p>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">↑ 8%</span>
+                  </div>
+                  <div class="p-4">
+                    <p class="text-xs text-gray-500 font-medium mb-2">Efisiensi Produksi</p>
+                    <div class="progress-track">
+                      <div class="progress-fill bg-blue-400" style="width:78%"></div>
+                    </div>
+                    <div class="flex justify-between mt-1.5">
+                      <span class="text-xs text-gray-400">Target: 12.000 L</span>
+                      <span class="text-xs font-semibold text-blue-600">78%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tren Produksi (2/3) -->
+              <div class="xl:col-span-2 bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
+                <div class="flex items-center justify-between border-b border-gray-100 p-5">
+                  <div>
+                    <h3 class="text-sm font-semibold text-slate-800">Tren Produksi Susu</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Harian selama 7 hari terakhir (Liter)</p>
+                  </div>
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                    Naik 8% ↑
+                  </span>
+                </div>
+                <div class="p-5 relative w-full" style="height:240px;">
+                  <canvas id="milk-trend-chart"></canvas>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 4. FINANCIAL ANALYSIS                                  -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <section aria-labelledby="section-fin">
+            <h2 id="section-fin" class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">
+              Analisis Keuangan
+            </h2>
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+
+              <!-- Breakdown Keuangan (3/5) -->
+              <div class="xl:col-span-3 bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
+                <div class="border-b border-gray-100 p-5">
+                  <h3 class="text-sm font-semibold text-slate-800">Rincian Pendapatan &amp; Biaya</h3>
+                  <p class="text-xs text-gray-400 mt-0.5">Bulan Juni 2026</p>
+                </div>
+                <div class="p-5 space-y-3">
+                  <!-- Pemasukan -->
+                  <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pemasukan</p>
+                  <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                      <span class="text-sm text-gray-700">Penjualan Ternak</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-sm font-bold text-emerald-600" id="fin-jual-ternak">—</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
+                      <span class="text-sm text-gray-700">Penjualan Susu</span>
+                    </div>
+                    <span class="text-sm font-bold text-emerald-600">Rp 14.100.000</span>
+                  </div>
+                  <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-2 h-2 rounded-full bg-teal-400 shrink-0"></span>
+                      <span class="text-sm text-gray-700">Penjualan Pupuk Organik</span>
+                    </div>
+                    <span class="text-sm font-bold text-emerald-600">Rp 2.500.000</span>
+                  </div>
+
+                  <!-- Pengeluaran -->
+                  <p class="text-xs font-bold text-gray-400 uppercase tracking-wider pt-2">Pengeluaran</p>
+                  <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
+                      <span class="text-sm text-gray-700">Pembelian Pakan</span>
+                    </div>
+                    <span class="text-sm font-bold text-red-500" id="fin-biaya-pakan">—</span>
+                  </div>
+                  <div class="flex items-center justify-between py-2.5 border-b border-gray-50">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
+                      <span class="text-sm text-gray-700">Biaya Operasional</span>
+                    </div>
+                    <span class="text-sm font-bold text-red-500">Rp 3.200.000</span>
+                  </div>
+
+                  <!-- Net Profit -->
+                  <div class="mt-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-4 flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Laba Bersih</p>
+                      <p class="text-xs text-emerald-600 mt-0.5">Pendapatan − Biaya Operasional</p>
+                    </div>
+                    <p class="text-2xl font-bold text-emerald-700" id="fin-net-profit">—</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Donut Revenue Breakdown (2/5) -->
+              <div class="xl:col-span-2 bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
+                <div class="border-b border-gray-100 p-5">
+                  <h3 class="text-sm font-semibold text-slate-800">Komposisi Pendapatan</h3>
+                  <p class="text-xs text-gray-400 mt-0.5">Distribusi per sumber</p>
+                </div>
+                <div class="p-5 flex flex-col items-center">
+                  <div class="relative w-full flex justify-center" style="height:180px;">
+                    <canvas id="revenue-donut-chart"></canvas>
+                  </div>
+                  <div class="mt-5 w-full space-y-2.5">
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2 text-xs text-gray-600">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500 shrink-0"></span>Ternak
+                      </span>
+                      <span class="text-xs font-bold text-slate-700" id="donut-ternak-pct">—</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2 text-xs text-gray-600">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-blue-400 shrink-0"></span>Susu
+                      </span>
+                      <span class="text-xs font-bold text-slate-700">~30%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2 text-xs text-gray-600">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-teal-400 shrink-0"></span>Pupuk
+                      </span>
+                      <span class="text-xs font-bold text-slate-700">~5%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 5. SMART INSIGHTS                                     -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <section aria-labelledby="section-insights">
+            <h2 id="section-insights" class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">
+              Smart Insights
+              <span class="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 normal-case">AI-powered</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" id="insights-grid">
+
+              <!-- Insight 1 -->
+              <div class="insight-card bg-white border border-amber-100 rounded-xl p-4 shadow-xs cursor-default">
+                <div class="flex items-start gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                      stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-amber-700 uppercase tracking-wide">Pakan</p>
+                    <p class="text-sm font-semibold text-slate-800 mt-1 leading-snug">
+                      Konsumsi pakan naik 12% dibanding minggu lalu
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1.5">Perlu review efisiensi distribusi pakan per kandang.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Insight 2 -->
+              <div class="insight-card bg-white border border-blue-100 rounded-xl p-4 shadow-xs cursor-default">
+                <div class="flex items-start gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                      stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-blue-700 uppercase tracking-wide">Produksi Susu</p>
+                    <p class="text-sm font-semibold text-slate-800 mt-1 leading-snug">
+                      Produksi susu naik 8% bulan ini — tren positif
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1.5">20 sapi laktasi semua dalam kondisi produktif optimal.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Insight 3 -->
+              <div class="insight-card bg-white border border-red-100 rounded-xl p-4 shadow-xs cursor-default">
+                <div class="flex items-start gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                      stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-red-600 uppercase tracking-wide">Stok Pakan ⚠️</p>
+                    <p class="text-sm font-semibold text-slate-800 mt-1 leading-snug">
+                      Stok pakan diperkirakan habis dalam 8 hari
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1.5">Segera lakukan order minimal 475 kg ke supplier.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Insight 4 -->
+              <div class="insight-card bg-white border border-emerald-100 rounded-xl p-4 shadow-xs cursor-default">
+                <div class="flex items-start gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                      stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Keuangan</p>
+                    <p class="text-sm font-semibold text-slate-800 mt-1 leading-snug">
+                      Pendapatan naik 15% dibanding bulan sebelumnya
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1.5">Margin laba bersih mencapai titik tertinggi Q2 2026.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 6. DOWNLOAD REPORTS                                   -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <section aria-labelledby="section-download">
+            <h2 id="section-download" class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">
+              Unduh Laporan
+            </h2>
+            <div class="bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
+              <div class="border-b border-gray-100 p-5">
+                <h3 class="text-sm font-semibold text-slate-800">Dokumen &amp; Laporan Resmi</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Unduh laporan dalam format PDF siap cetak</p>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="border-b border-gray-100 bg-gray-50/50">
+                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Laporan</th>
+                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Deskripsi</th>
+                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Periode</th>
+                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Unduh</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100" id="download-tbody">
+
+                    <!-- Row 1: Laporan Ternak -->
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                      <td class="p-4">
+                        <div class="flex items-center gap-3">
+                          <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                              stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M5 9c0-3 3-5 7-5s7 2 7 5a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6z"/>
+                              <path d="M9 13v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <p class="text-sm font-semibold text-slate-800">Laporan Ternak</p>
+                            <p class="text-xs text-gray-400">Inventaris &amp; status semua sapi</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="p-4 text-sm text-gray-600 max-w-[200px]">
+                        Data lengkap: jumlah, status, kandang, berat, dan kepemilikan
+                      </td>
+                      <td class="p-4">
+                        <span class="text-xs font-medium text-gray-600">Juni 2026</span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          Tersedia
+                        </span>
+                      </td>
+                      <td class="p-4 text-right">
+                        <button onclick="downloadReport('ternak')"
+                          id="dl-ternak"
+                          class="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-white px-3.5 py-2 text-xs font-semibold transition-colors focus:outline-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+                          </svg>
+                          PDF
+                        </button>
+                      </td>
+                    </tr>
+
+                    <!-- Row 2: Laporan Pakan -->
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                      <td class="p-4">
+                        <div class="flex items-center gap-3">
+                          <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                              stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M12 22v-8"/>
+                              <path d="M12 14c-3.3 0-6-2.7-6-6 0-3.3 2.7-6 6-6s6 2.7 6 6c0 3.3-2.7 6-6 6z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <p class="text-sm font-semibold text-slate-800">Laporan Pakan</p>
+                            <p class="text-xs text-gray-400">Order, konsumsi &amp; stok pakan</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="p-4 text-sm text-gray-600 max-w-[200px]">
+                        Riwayat PO pakan, total konsumsi, dan estimasi kebutuhan
+                      </td>
+                      <td class="p-4">
+                        <span class="text-xs font-medium text-gray-600">Juni 2026</span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          Tersedia
+                        </span>
+                      </td>
+                      <td class="p-4 text-right">
+                        <button onclick="downloadReport('pakan')"
+                          id="dl-pakan"
+                          class="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-white px-3.5 py-2 text-xs font-semibold transition-colors focus:outline-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+                          </svg>
+                          PDF
+                        </button>
+                      </td>
+                    </tr>
+
+                    <!-- Row 3: Laporan Produksi Susu -->
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                      <td class="p-4">
+                        <div class="flex items-center gap-3">
+                          <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                              stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <line x1="18" y1="20" x2="18" y2="10"/>
+                              <line x1="12" y1="20" x2="12" y2="4"/>
+                              <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <p class="text-sm font-semibold text-slate-800">Laporan Produksi Susu</p>
+                            <p class="text-xs text-gray-400">Tren &amp; rincian per sapi perah</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="p-4 text-sm text-gray-600 max-w-[200px]">
+                        Data harian, mingguan, bulanan produksi susu semua kandang
+                      </td>
+                      <td class="p-4">
+                        <span class="text-xs font-medium text-gray-600">Juni 2026</span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          Tersedia
+                        </span>
+                      </td>
+                      <td class="p-4 text-right">
+                        <button onclick="downloadReport('susu')"
+                          id="dl-susu"
+                          class="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-white px-3.5 py-2 text-xs font-semibold transition-colors focus:outline-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+                          </svg>
+                          PDF
+                        </button>
+                      </td>
+                    </tr>
+
+                    <!-- Row 4: Laporan Keuangan -->
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                      <td class="p-4">
+                        <div class="flex items-center gap-3">
+                          <div class="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                              stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                              <path d="M14 2v6h6"/>
+                              <line x1="16" x2="8" y1="13" y2="13"/>
+                              <line x1="16" x2="8" y1="17" y2="17"/>
+                              <line x1="10" x2="8" y1="9" y2="9"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <p class="text-sm font-semibold text-slate-800">Laporan Keuangan</p>
+                            <p class="text-xs text-gray-400">Laba rugi &amp; arus kas koperasi</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="p-4 text-sm text-gray-600 max-w-[200px]">
+                        Pemasukan, pengeluaran, laba bersih, dan tren finansial
+                      </td>
+                      <td class="p-4">
+                        <span class="text-xs font-medium text-gray-600">Q2 2026</span>
+                      </td>
+                      <td class="p-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border bg-amber-50 text-amber-700 border-amber-200">
+                          Sedang Disiapkan
+                        </span>
+                      </td>
+                      <td class="p-4 text-right">
+                        <button onclick="downloadReport('keuangan')"
+                          id="dl-keuangan"
+                          class="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 hover:bg-slate-800 text-white px-3.5 py-2 text-xs font-semibold transition-colors focus:outline-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+                          </svg>
+                          PDF
+                        </button>
+                      </td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </div><!-- /main container -->
+      </main>
     </div>
-    <!-- ===== Page Wrapper End ===== -->
-  </body>
+    <!-- ===== Content Area End ===== -->
+  </div>
+  <!-- ===== Page Wrapper End ===== -->
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <!-- SCRIPTS                                                       -->
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <script>
+    const API = 'http://localhost:8000';
+    const HARGA_PER_KG_SAPI = 55000; // estimasi harga jual per kg bobot hidup
+
+    // ── Helpers ──────────────────────────────────────────────────
+    const fmt = n => n == null ? '—'
+      : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
+
+    // ── Load dari backend ─────────────────────────────────────────
+    async function loadData() {
+      try {
+        const [cowsRes, feedRes] = await Promise.all([
+          fetch(`${API}/cows`),
+          fetch(`${API}/feed-orders`)
+        ]);
+        const cows  = cowsRes.ok  ? await cowsRes.json()  : [];
+        const feeds = feedRes.ok  ? await feedRes.json()  : [];
+        populateDynamic(cows, feeds);
+      } catch (e) {
+        console.warn('Backend tidak tersedia — menampilkan data demo.', e);
+      }
+    }
+
+    function populateDynamic(cows, feeds) {
+      // Ternak aktif (not SOLD)
+      const aktif = cows.filter(c => c.status !== 'SOLD');
+      const sold  = cows.filter(c => c.status === 'SOLD');
+      document.getElementById('ops-ternak').textContent = aktif.length || 17;
+      document.getElementById('ops-ternak-sold').textContent =
+        `${sold.length} terjual bulan ini`;
+
+      // Konsumsi pakan total dari feed orders
+      const totalPakan = feeds.reduce((s, f) => s + ((f.qty || 0) * (f.price_per_kg || 5000)), 0);
+      const totalPakanKg = feeds.reduce((s, f) => s + (f.qty || 0), 0);
+      document.getElementById('ops-pakan').textContent =
+        totalPakanKg > 0 ? totalPakanKg.toLocaleString('id-ID') : '2.550';
+
+      // Revenue dari sapi terjual
+      const revenueJualTernak = sold.reduce((s, c) => s + (c.weight ? c.weight * HARGA_PER_KG_SAPI : 0), 0);
+      const revenueSusu   = 14100000;
+      const revenuePupuk  = 2500000;
+      const totalRevenue  = (revenueJualTernak || 46500000) + revenueSusu + revenuePupuk;
+
+      document.getElementById('ops-revenue').textContent = fmt(totalRevenue);
+      document.getElementById('fin-jual-ternak').textContent = fmt(revenueJualTernak || 46500000);
+      document.getElementById('fin-biaya-pakan').textContent = fmt(totalPakan || 2375000);
+
+      // Net profit
+      const netProfit = totalRevenue - (totalPakan || 2375000) - 3200000;
+      document.getElementById('fin-net-profit').textContent = fmt(netProfit > 0 ? netProfit : 57025000);
+
+      // Donut pct
+      const pctTernak = Math.round(((revenueJualTernak || 46500000) / totalRevenue) * 100);
+      document.getElementById('donut-ternak-pct').textContent = `~${pctTernak}%`;
+
+      // Kandang breakdown
+      const kandangA = cows.filter(c => c.barn === 'A').length;
+      const kandangB = cows.filter(c => c.barn === 'B').length;
+      document.getElementById('feed-kandang-a').textContent =
+        kandangA > 0 ? `${kandangA * 5} kg/hari` : '45 kg/hari';
+      document.getElementById('feed-kandang-b').textContent =
+        kandangB > 0 ? `${kandangB * 5} kg/hari` : '40 kg/hari';
+
+      // Update donut with real pct
+      if (window._revenueDonut) {
+        window._revenueDonut.data.datasets[0].data = [
+          revenueJualTernak || 46500000,
+          revenueSusu,
+          revenuePupuk
+        ];
+        window._revenueDonut.update();
+      }
+    }
+
+    // ── Chart: Feed Category Bar ──────────────────────────────────
+    function initFeedCategoryChart() {
+      const ctx = document.getElementById('feed-category-chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+          datasets: [
+            {
+              label: 'Sapi Potong',
+              data: [420, 390, 450, 410, 480, 510],
+              backgroundColor: 'rgba(16,185,129,.18)',
+              borderColor: '#10b981',
+              borderWidth: 2,
+              borderRadius: 5,
+              borderSkipped: false,
+            },
+            {
+              label: 'Sapi Perah',
+              data: [380, 360, 400, 370, 420, 460],
+              backgroundColor: 'rgba(96,165,250,.18)',
+              borderColor: '#60a5fa',
+              borderWidth: 2,
+              borderRadius: 5,
+              borderSkipped: false,
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, border: { display: false },
+                 ticks: { color: '#9ca3af', font: { size: 11 } } },
+            y: { grid: { color: '#f3f4f6' }, border: { display: false },
+                 ticks: { color: '#9ca3af', font: { size: 11 },
+                          callback: v => v + ' kg' } }
+          }
+        }
+      });
+    }
+
+    // ── Chart: Milk Trend Line ────────────────────────────────────
+    function initMilkTrendChart() {
+      const ctx = document.getElementById('milk-trend-chart').getContext('2d');
+      const labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      const data   = [295, 310, 305, 318, 312, 325, 320];
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Produksi (L)',
+            data,
+            borderColor: '#3b82f6',
+            backgroundColor: ctx => {
+              const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
+              g.addColorStop(0, 'rgba(59,130,246,.18)');
+              g.addColorStop(1, 'rgba(59,130,246,0)');
+              return g;
+            },
+            borderWidth: 2.5,
+            pointBackgroundColor: '#3b82f6',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: .4,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: c => ` ${c.parsed.y} Liter` } }
+          },
+          scales: {
+            x: { grid: { display: false }, border: { display: false },
+                 ticks: { color: '#9ca3af', font: { size: 11 } } },
+            y: { grid: { color: '#f3f4f6' }, border: { display: false },
+                 min: 270,
+                 ticks: { color: '#9ca3af', font: { size: 11 },
+                          callback: v => v + ' L' } }
+          }
+        }
+      });
+    }
+
+    // ── Chart: Revenue Donut ──────────────────────────────────────
+    function initRevenueDonut() {
+      const ctx = document.getElementById('revenue-donut-chart').getContext('2d');
+      window._revenueDonut = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Jual Ternak', 'Jual Susu', 'Pupuk Organik'],
+          datasets: [{
+            data: [46500000, 14100000, 2500000],
+            backgroundColor: ['#10b981', '#60a5fa', '#2dd4bf'],
+            borderWidth: 0,
+            hoverOffset: 6,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: c => ` ${c.label}: ${new Intl.NumberFormat('id-ID', {
+                  style: 'currency', currency: 'IDR', maximumFractionDigits: 0
+                }).format(c.parsed)}`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ── Download Reports ──────────────────────────────────────────
+    async function downloadReport(type) {
+      const btn = document.getElementById(`dl-${type}`);
+      const orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"></circle>
+        <path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Menyiapkan...`;
+
+      // Simulasi proses (integrasi backend nantinya)
+      await new Promise(r => setTimeout(r, 1200));
+
+      if (type === 'ternak') {
+        // Untuk sapi SOLD — bisa loop dan download SPK masing-masing
+        // Untuk demo, kita buka satu tab contoh
+        window.open(`${API}/cows`, '_blank');
+      } else {
+        // Placeholder — bisa diganti dengan endpoint backend yang generate PDF
+        alert(`📄 Laporan ${type.charAt(0).toUpperCase() + type.slice(1)} sedang dalam pengembangan.\n\nEndpoint backend dapat ditambahkan di /reports/${type}/pdf`);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      initFeedCategoryChart();
+      initMilkTrendChart();
+      initRevenueDonut();
+      loadData();
+    });
+  </script>
+</body>
+
 </html>

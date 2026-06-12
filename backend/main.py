@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse
 from pydantic import BaseModel
 from typing import Optional
-from database import conn, cursor
+from database import conn
 
 # Thread lock to prevent SQLite cursor conflicts between
 # the Telegram bot daemon thread and FastAPI request threads
@@ -19,25 +19,28 @@ db_lock = threading.Lock()
 
 
 def db_fetch_all(sql: str, params: tuple = ()):
-    """Thread-safe fetchall helper."""
+    """Thread-safe fetchall helper — uses a fresh cursor per call."""
     with db_lock:
-        cursor.execute(sql, params)
-        return cursor.fetchall()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        return cur.fetchall()
 
 
 def db_fetch_one(sql: str, params: tuple = ()):
-    """Thread-safe fetchone helper."""
+    """Thread-safe fetchone helper — uses a fresh cursor per call."""
     with db_lock:
-        cursor.execute(sql, params)
-        return cursor.fetchone()
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        return cur.fetchone()
 
 
 def db_execute(sql: str, params: tuple = ()):
-    """Thread-safe execute + commit helper."""
+    """Thread-safe execute + commit helper — uses a fresh cursor per call."""
     with db_lock:
-        cursor.execute(sql, params)
+        cur = conn.cursor()
+        cur.execute(sql, params)
         conn.commit()
-        return cursor.lastrowid
+        return cur.lastrowid
 
 from telegram_bot import (
     start_bot,
@@ -93,6 +96,8 @@ class UpdateCowDetail(BaseModel):
     umur: Optional[str] = None
     tgl_masuk: Optional[str] = None
     deskripsi: Optional[str] = None
+    lactate_status: Optional[str] = None
+    litre_milked_today: Optional[float] = None
 
 
 class MemberRequest(BaseModel):
@@ -110,11 +115,13 @@ def home():
 
 @app.get("/members")
 def get_members():
+    """Hanya Penitip Ternak."""
     rows = db_fetch_all(
         """
-        SELECT m.id, m.name, m.nik, m.phone, m.alamat, m.role, m.barn,
-               (SELECT COUNT(*) FROM cows c WHERE c.barn = m.barn AND m.barn IS NOT NULL) AS cow_count
+        SELECT m.id, m.name, m.nik, m.phone, m.alamat, m.role, m.barn, m.iuran_wajib, m.iuran_pokok,
+               (SELECT COUNT(*) FROM cows c WHERE c.owner_id = m.id) AS cow_count
         FROM members m
+        WHERE m.role != 'Penanggungjawab Ternak'
         """
     )
     result = []
@@ -127,27 +134,141 @@ def get_members():
             "alamat": r[4],
             "role": r[5] or "Penitip Ternak",
             "barn": r[6],
+            "iuran_wajib": r[7] or 50000.0,
+            "iuran_pokok": r[8] or 100000.0,
+            "cow_count": r[9] or 0,
+        })
+    return result
+
+
+@app.get("/members/{member_id}")
+def get_member_detail(member_id: int):
+    """Detail Penitip Ternak — menampilkan sapi yang DIMILIKI."""
+    row = db_fetch_one(
+        """
+        SELECT m.id, m.name, m.nik, m.phone, m.alamat, m.role, m.barn, m.iuran_wajib, m.iuran_pokok
+        FROM members m
+        WHERE m.id = ? AND m.role != 'Penanggungjawab Ternak'
+        """,
+        (member_id,)
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Penitip tidak ditemukan.")
+
+    member_data = {
+        "id": row[0],
+        "name": row[1],
+        "nik": row[2],
+        "phone": row[3],
+        "alamat": row[4],
+        "role": row[5] or "Penitip Ternak",
+        "barn": row[6],
+        "iuran_wajib": row[7] or 50000.0,
+        "iuran_pokok": row[8] or 100000.0,
+        "cows": []
+    }
+
+    cows = db_fetch_all(
+        """
+        SELECT id, cow_code, weight, status, barn, jenis, lactate_status, litre_milked_today
+        FROM cows WHERE owner_id = ?
+        """,
+        (member_id,)
+    )
+    for c in cows:
+        member_data["cows"].append({
+            "id": c[0], "cow_code": c[1], "weight": c[2], "status": c[3],
+            "barn": c[4], "jenis": c[5],
+            "lactate_status": c[6] or "Kering",
+            "litre_milked_today": c[7] or 0.0
+        })
+
+    return member_data
+
+
+@app.get("/penanggungjawab")
+def get_penanggungjawab():
+    """Semua Penanggungjawab Ternak beserta jumlah sapi di kandangnya."""
+    rows = db_fetch_all(
+        """
+        SELECT m.id, m.name, m.nik, m.phone, m.alamat, m.role, m.barn,
+               (SELECT COUNT(*) FROM cows c WHERE c.barn = m.barn AND m.barn IS NOT NULL) AS cow_count
+        FROM members m
+        WHERE m.role = 'Penanggungjawab Ternak'
+        """
+    )
+    result = []
+    for r in rows:
+        result.append({
+            "id": r[0],
+            "name": r[1],
+            "nik": r[2],
+            "phone": r[3],
+            "alamat": r[4],
+            "role": r[5],
+            "barn": r[6],
             "cow_count": r[7] or 0,
         })
     return result
 
 
+@app.get("/penanggungjawab/{pj_id}")
+def get_penanggungjawab_detail(pj_id: int):
+    """Detail Penanggungjawab Ternak — menampilkan sapi yang ADA DI KANDANGNYA."""
+    row = db_fetch_one(
+        """
+        SELECT m.id, m.name, m.nik, m.phone, m.alamat, m.role, m.barn
+        FROM members m
+        WHERE m.id = ? AND m.role = 'Penanggungjawab Ternak'
+        """,
+        (pj_id,)
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Penanggungjawab tidak ditemukan.")
+
+    pj_data = {
+        "id": row[0],
+        "name": row[1],
+        "nik": row[2],
+        "phone": row[3],
+        "alamat": row[4],
+        "role": row[5],
+        "barn": row[6],
+        "cows": []
+    }
+
+    if row[6]:  # barn
+        cows = db_fetch_all(
+            """
+            SELECT c.id, c.cow_code, c.weight, c.status, c.jenis,
+                   c.lactate_status, c.litre_milked_today, m2.name AS owner_name
+            FROM cows c
+            LEFT JOIN members m2 ON c.owner_id = m2.id
+            WHERE c.barn = ?
+            ORDER BY c.cow_code
+            """,
+            (row[6],)
+        )
+        for c in cows:
+            pj_data["cows"].append({
+                "id": c[0], "cow_code": c[1], "weight": c[2], "status": c[3],
+                "jenis": c[4],
+                "lactate_status": c[5] or "Kering",
+                "litre_milked_today": c[6] or 0.0,
+                "owner_name": c[7] or "—"
+            })
+
+    return pj_data
+
+
 @app.post("/members")
 def add_member(data: MemberRequest):
     try:
-        with db_lock:
-            cursor.execute(
-                """
-                INSERT INTO members(name, nik, phone, alamat, role)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (data.name, data.nik, data.phone, data.alamat, data.role)
-            )
-            conn.commit()
-            member_id = cursor.lastrowid
+        member_id = db_execute(
+            "INSERT INTO members(name, nik, phone, alamat, role) VALUES (?, ?, ?, ?, ?)",
+            (data.name, data.nik, data.phone, data.alamat, data.role)
+        )
     except Exception as e:
-        with db_lock:
-            conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
     return {
@@ -160,49 +281,19 @@ def add_member(data: MemberRequest):
 
 @app.post("/new-cow")
 def new_cow(data: CowRequest):
-
     hash_id = uuid.uuid4().hex[:8]
-
     try:
-        cursor.execute(
-            """
-            INSERT INTO cows(
-                cow_code,
-                status,
-                hash_id
-            )
-            VALUES (?, ?, ?)
-            """,
-            (
-                data.cow_id,
-                "LOOKING_FOR_CARETAKER",
-                hash_id
-            )
+        db_execute(
+            "INSERT INTO cows(cow_code, status, hash_id) VALUES (?, ?, ?)",
+            (data.cow_id, "LOOKING_FOR_CARETAKER", hash_id)
         )
-        conn.commit()
     except sqlite3.IntegrityError:
-        conn.rollback()
-        raise HTTPException(
-            status_code=400,
-            detail=f"Sapi dengan ID '{data.cow_id}' sudah ada."
-        )
+        raise HTTPException(status_code=400, detail=f"Sapi dengan ID '{data.cow_id}' sudah ada.")
     except Exception as e:
-        conn.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
-    send_new_cow(
-        data.cow_id,
-        data.owner
-    )
-
-    return {
-        "message": "Sapi disimpan dan notifikasi dikirim",
-        "cow_id": data.cow_id,
-        "hash_id": hash_id
-    }
+    send_new_cow(data.cow_id, data.owner)
+    return {"message": "Sapi disimpan dan notifikasi dikirim", "cow_id": data.cow_id, "hash_id": hash_id}
 
 
 @app.get("/cows")
@@ -210,7 +301,8 @@ def get_cows():
     rows = db_fetch_all(
         """
         SELECT c.id, c.cow_code, c.owner_id, c.weight, c.status, c.caretaker,
-               c.feed_qty_needed, c.barn, c.hash_id, c.jenis, m.name AS owner_name
+               c.feed_qty_needed, c.barn, c.hash_id, c.jenis, m.name AS owner_name,
+               c.lactate_status, c.litre_milked_today
         FROM cows c
         LEFT JOIN members m ON c.owner_id = m.id
         """
@@ -229,6 +321,8 @@ def get_cows():
             "hash_id": r[8],
             "jenis": r[9],
             "owner_name": r[10],
+            "lactate_status": r[11] or "Kering",
+            "litre_milked_today": r[12] or 0.0,
         })
     return result
 
@@ -253,132 +347,58 @@ def get_foto(cow_code: str):
 
 @app.post("/sell-cow")
 def sell_cow(data: SellCowRequest):
-
-    # Ambil data sapi
-    cursor.execute(
-        """
-        SELECT cow_code, status, barn, hash_id
-        FROM cows
-        WHERE cow_code = ?
-        """,
+    row = db_fetch_one(
+        "SELECT cow_code, status, barn, hash_id FROM cows WHERE cow_code = ?",
         (data.cow_code,)
     )
-    row = cursor.fetchone()
-
     if not row:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Sapi '{data.cow_code}' tidak ditemukan."
-        )
+        raise HTTPException(status_code=404, detail=f"Sapi '{data.cow_code}' tidak ditemukan.")
 
     cow_code, status, barn, hash_id = row
 
-    # Validasi status — tidak boleh proses ulang
     blocked_statuses = ("WAITING_CONFIRMATION", "SOLD")
     if status in blocked_statuses:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Sapi sudah dalam status '{status}', tidak bisa diproses ulang."
-        )
+        raise HTTPException(status_code=400, detail=f"Sapi sudah dalam status '{status}', tidak bisa diproses ulang.")
 
     if not hash_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Sapi tidak memiliki hash_id. Daftarkan ulang sapi ini."
-        )
+        raise HTTPException(status_code=400, detail="Sapi tidak memiliki hash_id. Daftarkan ulang sapi ini.")
 
     if not barn:
-        raise HTTPException(
-            status_code=400,
-            detail="Sapi belum memiliki lokasi kandang (belum di-accept oleh pengurus)."
-        )
+        raise HTTPException(status_code=400, detail="Sapi belum memiliki lokasi kandang (belum di-accept oleh pengurus).")
 
-    # Ambil Telegram ID PIC berdasarkan kandang (barn)
     pic_id = BARN_TELEGRAM_IDS.get(barn.upper())
     if not pic_id:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Tidak ada PIC untuk kandang '{barn}'."
-        )
+        raise HTTPException(status_code=400, detail=f"Tidak ada PIC untuk kandang '{barn}'.")
 
-    # Update status sapi → WAITING_CONFIRMATION
-    cursor.execute(
-        "UPDATE cows SET status = ? WHERE cow_code = ?",
-        ("WAITING_CONFIRMATION", cow_code)
-    )
-    conn.commit()
-
-    # Kirim notifikasi ke PIC kandang
+    db_execute("UPDATE cows SET status = ? WHERE cow_code = ?", ("WAITING_CONFIRMATION", cow_code))
     send_sell_scan_request(pic_id, cow_code, barn.upper(), hash_id)
 
-    return {
-        "message": "Notifikasi dikirim ke PIC kandang",
-        "cow_code": cow_code,
-        "barn": barn.upper(),
-        "pic_telegram_id": pic_id
-    }
+    return {"message": "Notifikasi dikirim ke PIC kandang", "cow_code": cow_code, "barn": barn.upper(), "pic_telegram_id": pic_id}
 
 
 @app.post("/buy-feed")
 def buy_feed():
-
-    # Hitung total kebutuhan pakan dari kandang yang aktif
-    cursor.execute(
-        """
-        SELECT COALESCE(SUM(feed_qty_needed), 0)
-        FROM cows
-        WHERE status NOT IN ('SOLD', 'REJECTED')
-        """
+    row = db_fetch_one(
+        "SELECT COALESCE(SUM(feed_qty_needed), 0) FROM cows WHERE status NOT IN ('SOLD', 'REJECTED')"
     )
-    total_qty = cursor.fetchone()[0] or 100  # fallback 100 kg jika belum ada data
-
-    # Harga per kg (akan diganti sistem MRP nantinya)
+    total_qty = (row[0] if row else 0) or 100
     price_per_kg = 5000.0
-
-    # Buat PO baru dengan kode unik
     po_code = f"PO-{int(time.time())}"
 
-    cursor.execute(
-        """
-        INSERT INTO feed_orders(
-            po_code,
-            qty,
-            price_per_kg,
-            status
-        )
-        VALUES (?, ?, ?, ?)
-        """,
-        (
-            po_code,
-            total_qty,
-            price_per_kg,
-            "PENDING"
-        )
+    db_execute(
+        "INSERT INTO feed_orders(po_code, qty, price_per_kg, status) VALUES (?, ?, ?, ?)",
+        (po_code, total_qty, price_per_kg, "PENDING")
     )
 
-    conn.commit()
-
-    # Simpan daftar penerima notifikasi untuk keperluan mutual-exclusion
     suppliers = [ELISA_ID, RAFIF_ID]
     for tid in suppliers:
-        cursor.execute(
-            """
-            INSERT INTO feed_order_recipients(po_code, telegram_id)
-            VALUES (?, ?)
-            """,
+        db_execute(
+            "INSERT INTO feed_order_recipients(po_code, telegram_id) VALUES (?, ?)",
             (po_code, tid)
         )
 
-    conn.commit()
-
-    # Kirim notifikasi ke semua supplier
     for chat_id in suppliers:
-        send_feed_order(
-            chat_id,
-            po_code,
-            total_qty,
-            price_per_kg
-        )
+        send_feed_order(chat_id, po_code, total_qty, price_per_kg)
 
     return {
         "message": "Feed order dikirim",
@@ -389,18 +409,44 @@ def buy_feed():
     }
 
 
+
+@app.get("/feed-orders")
+def get_feed_orders():
+    """
+    Ambil semua feed orders (PO pakan) untuk ditampilkan di halaman transaksi keuangan.
+    """
+    rows = db_fetch_all(
+        """
+        SELECT fo.id, fo.po_code, fo.qty, fo.price_per_kg, fo.status, fo.supplier
+        FROM feed_orders fo
+        ORDER BY fo.id DESC
+        """
+    )
+    result = []
+    for r in rows:
+        result.append({
+            "id": r[0],
+            "po_code": r[1],
+            "qty": r[2],
+            "price_per_kg": r[3] or 5000,
+            "status": r[4] or "PENDING",
+            "supplier": r[5],
+        })
+    return result
+
+
 # =============================================================
 # SPK – Surat Penjualan Sapi
 # =============================================================
 
 def _get_cow_full(cow_code: str) -> dict:
     """Helper: ambil data lengkap sapi + nama pemilik."""
-    cursor.execute(
+    row = db_fetch_one(
         """
         SELECT
             c.id, c.cow_code, c.owner_id, c.weight, c.status,
             c.caretaker, c.barn, c.jenis, c.umur, c.tgl_masuk,
-            c.deskripsi, c.foto_path,
+            c.deskripsi, c.foto_path, c.lactate_status, c.litre_milked_today,
             m.name AS owner_name
         FROM cows c
         LEFT JOIN members m ON c.owner_id = m.id
@@ -408,7 +454,6 @@ def _get_cow_full(cow_code: str) -> dict:
         """,
         (cow_code,)
     )
-    row = cursor.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail=f"Sapi '{cow_code}' tidak ditemukan.")
     return {
@@ -424,7 +469,9 @@ def _get_cow_full(cow_code: str) -> dict:
         "tgl_masuk":  row[9],
         "deskripsi":  row[10],
         "foto_path":  row[11],
-        "owner_name": row[12],
+        "lactate_status": row[12] or "Kering",
+        "litre_milked_today": row[13] or 0.0,
+        "owner_name": row[14],
     }
 
 
@@ -439,12 +486,7 @@ def preview_spk(cow_code: str):
 
 @app.put("/cows/{cow_code}")
 def update_cow_detail(cow_code: str, data: UpdateCowDetail):
-    """
-    Update detail informasi sapi (jenis, umur, tgl_masuk, deskripsi).
-    Bisa dipanggil kapan saja — tidak mempengaruhi status/alur penjualan.
-    """
-    cursor.execute("SELECT id FROM cows WHERE cow_code = ?", (cow_code,))
-    if not cursor.fetchone():
+    if not db_fetch_one("SELECT id FROM cows WHERE cow_code = ?", (cow_code,)):
         raise HTTPException(status_code=404, detail=f"Sapi '{cow_code}' tidak ditemukan.")
 
     fields, values = [], []
@@ -456,26 +498,24 @@ def update_cow_detail(cow_code: str, data: UpdateCowDetail):
         fields.append("tgl_masuk = ?"); values.append(data.tgl_masuk)
     if data.deskripsi is not None:
         fields.append("deskripsi = ?"); values.append(data.deskripsi)
+    if data.lactate_status is not None:
+        fields.append("lactate_status = ?"); values.append(data.lactate_status)
+    if data.litre_milked_today is not None:
+        fields.append("litre_milked_today = ?"); values.append(data.litre_milked_today)
 
     if not fields:
         return {"message": "Tidak ada field yang diupdate."}
 
     values.append(cow_code)
-    cursor.execute(f"UPDATE cows SET {', '.join(fields)} WHERE cow_code = ?", values)
-    conn.commit()
+    db_execute(f"UPDATE cows SET {', '.join(fields)} WHERE cow_code = ?", tuple(values))
     return {"message": "Detail sapi berhasil diperbarui.", "cow_code": cow_code}
 
 
 @app.post("/cows/{cow_code}/foto")
 async def upload_foto(cow_code: str, foto: UploadFile = File(...)):
-    """
-    Upload foto sapi. File disimpan di folder foto_sapi/ dengan nama {cow_code}.jpg/png.
-    """
-    cursor.execute("SELECT id FROM cows WHERE cow_code = ?", (cow_code,))
-    if not cursor.fetchone():
+    if not db_fetch_one("SELECT id FROM cows WHERE cow_code = ?", (cow_code,)):
         raise HTTPException(status_code=404, detail=f"Sapi '{cow_code}' tidak ditemukan.")
 
-    # Validasi tipe file
     allowed = {"image/jpeg", "image/png", "image/webp"}
     if foto.content_type not in allowed:
         raise HTTPException(status_code=400, detail="Hanya file JPEG/PNG/WEBP yang diizinkan.")
@@ -487,9 +527,7 @@ async def upload_foto(cow_code: str, foto: UploadFile = File(...)):
     with open(save_path, "wb") as f:
         f.write(contents)
 
-    cursor.execute("UPDATE cows SET foto_path = ? WHERE cow_code = ?", (save_path, cow_code))
-    conn.commit()
-
+    db_execute("UPDATE cows SET foto_path = ? WHERE cow_code = ?", (save_path, cow_code))
     return {"message": "Foto berhasil diupload.", "foto_path": save_path}
 
 

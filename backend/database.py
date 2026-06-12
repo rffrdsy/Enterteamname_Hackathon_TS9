@@ -88,6 +88,10 @@ if "deskripsi" not in cows_cols:
     cursor.execute("ALTER TABLE cows ADD COLUMN deskripsi TEXT")
 if "foto_path" not in cows_cols:
     cursor.execute("ALTER TABLE cows ADD COLUMN foto_path TEXT")
+if "lactate_status" not in cows_cols:
+    cursor.execute("ALTER TABLE cows ADD COLUMN lactate_status TEXT DEFAULT 'Kering'")
+if "litre_milked_today" not in cows_cols:
+    cursor.execute("ALTER TABLE cows ADD COLUMN litre_milked_today REAL DEFAULT 0.0")
 
 cursor.execute("PRAGMA table_info(feed_orders)")
 fo_cols = [row[1] for row in cursor.fetchall()]
@@ -107,6 +111,10 @@ if "role" not in members_cols:
     cursor.execute("ALTER TABLE members ADD COLUMN role TEXT DEFAULT 'Penitip Ternak'")
 if "barn" not in members_cols:
     cursor.execute("ALTER TABLE members ADD COLUMN barn TEXT")
+if "iuran_wajib" not in members_cols:
+    cursor.execute("ALTER TABLE members ADD COLUMN iuran_wajib REAL DEFAULT 50000.0")
+if "iuran_pokok" not in members_cols:
+    cursor.execute("ALTER TABLE members ADD COLUMN iuran_pokok REAL DEFAULT 100000.0")
     # Seed barn assignment: Penanggungjawab pertama → A, kedua → B
     cursor.execute("""
         UPDATE members SET barn = 'A'

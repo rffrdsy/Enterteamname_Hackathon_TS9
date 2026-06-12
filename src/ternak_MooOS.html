@@ -81,8 +81,8 @@
                     <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Kandang</th>
                     <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Pemilik</th>
                     <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Berat</th>
-                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Laktasi</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Susu Hari Ini (L)</th>
                   </tr>
                 </thead>
                 <tbody id="ternak-tbody" class="divide-y divide-gray-100">
@@ -298,12 +298,11 @@
                   </div>` : `<span class="text-sm text-gray-400">—</span>`}
                 </td>
                 <td class="p-4 text-sm text-gray-600">${cow.weight ? cow.weight + ' kg' : '—'}</td>
-                <td class="p-4">${statusBadge(cow.status)}</td>
+                <td class="p-4">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${cow.lactate_status === 'Laktasi' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200'}">${cow.lactate_status || 'Kering'}</span>
+                </td>
                 <td class="p-4 text-right">
-                  <span class="text-blue-600 hover:text-blue-800 text-xs font-semibold inline-flex items-center gap-1">
-                    Detail
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                  </span>
+                  <span class="text-sm font-bold text-slate-800">${(cow.litre_milked_today || 0).toFixed(1)} L</span>
                 </td>
               </tr>`;
         }).join('');
@@ -380,30 +379,6 @@
     // ── Init ───────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', loadTernak);
   </script>
-</body>
-
-</html>
-document.getElementById('success-cow-code').textContent = activeCowCode;
-document.getElementById('success-volume').textContent = vol + ' Liter';
-
-document.getElementById('modal-form-view').classList.add('hidden');
-document.getElementById('modal-success-view').classList.remove('hidden');
-} catch (err) {
-errEl.textContent = `Gagal menyimpan data: ${err.message}`;
-errEl.classList.remove('hidden');
-btn.disabled = false;
-btn.textContent = 'Simpan Data Peras';
-}
-}
-
-// Close modal on backdrop click
-document.getElementById('modal-peras').addEventListener('click', function(e) {
-if (e.target === this) closePerasModal();
-});
-
-// ── Init ───────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', loadTernak);
-</script>
 </body>
 
 </html>
