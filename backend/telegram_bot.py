@@ -5,7 +5,9 @@ from config import (
     ABYASA_ID,
     AXEL_ID,
     ELISA_ID,
-    RAFIF_ID
+    RAFIF_ID,
+    BOT_USERNAME,
+    BARN_TELEGRAM_IDS
 )
 
 SUPPLIER_NAMES = {
@@ -31,48 +33,164 @@ def start(message):
 
     print("CHAT ID:", message.chat.id)
 
+    text = message.text.strip()
+    parts = text.split(" ", 1)
+
+    # Handle deep link payload: /start CONFIRM_{cow_code}_{hash_id}
+    if len(parts) > 1:
+        payload = parts[1].strip()
+
+        if payload.startswith("CONFIRM_"):
+            # Format: CONFIRM_{cow_code}_{hash_id}
+            # hash_id selalu 8 karakter di akhir, dipisah underscore terakhir
+            inner = payload[len("CONFIRM_"):]
+            segments = inner.rsplit("_", 1)
+
+            if len(segments) == 2:
+                cow_code, hash_id = segments
+                _handle_confirm_sell(message, cow_code, hash_id)
+                return
+
     bot.send_message(
         message.chat.id,
         f"Halo {message.from_user.first_name}"
     )
 
 
-@bot.message_handler(commands=['testsapi'])
-def test_sapi(message):
+def _handle_confirm_sell(message, cow_code, hash_id):
+    """Validasi QR scan: cocokkan cow_code + hash_id lalu tampilkan tombol konfirmasi."""
 
-    send_new_cow(
-    "SPR-001",
-    "Pak Budi"
-)
+    cursor.execute(
+        """
+        SELECT cow_code, status, hash_id, barn
+        FROM cows
+        WHERE cow_code = ?
+        """,
+        (cow_code,)
+    )
+    row = cursor.fetchone()
 
+    if not row:
+        bot.send_message(message.chat.id, "❌ QR Code tidak valid. Sapi tidak ditemukan.")
+        return
 
-@bot.message_handler(commands=['testjual'])
-def test_jual(message):
+    db_cow_code, status, db_hash_id, barn = row
 
-    send_prepare_sale(
-        message.chat.id,
-        "SPR-001"
+    # Validasi hash
+    if hash_id != db_hash_id:
+        bot.send_message(message.chat.id, "❌ QR Code tidak valid. Hash tidak cocok.")
+        return
+
+    # Validasi otorisasi: hanya PIC kandang yang boleh konfirmasi
+    authorized_id = BARN_TELEGRAM_IDS.get((barn or "").upper())
+    if message.from_user.id != authorized_id:
+        bot.send_message(
+            message.chat.id,
+            f"🚫 Akses ditolak. Hanya penanggungjawab ternak {barn or '?'} yang bisa mengkonfirmasi sapi ini."
+        )
+        return
+
+    # Validasi status
+    if status != "WAITING_CONFIRMATION":
+        status_msg = {
+            "SOLD": "ℹ️ Sapi ini sudah terjual.",
+        }.get(status, f"⚠️ Sapi ini tidak sedang dalam proses konfirmasi (status: {status}).")
+        bot.send_message(message.chat.id, status_msg)
+        return
+
+    # Tampilkan tombol konfirmasi
+    markup = InlineKeyboardMarkup()
+    markup.add(
+        InlineKeyboardButton(
+            "✅ Konfirmasi Siap Jual",
+            callback_data=f"confirmsell_{cow_code}"
+        )
     )
 
-
-@bot.message_handler(commands=['testpo'])
-def test_po(message):
-
-    send_feed_order(
+    msg = bot.send_message(
         message.chat.id,
-        "PO-001",
-        100
+        f"""
+🔍 VERIFIKASI SAPI
+
+Kode    : {cow_code}
+Kandang : {barn or '-'}
+Status  : WAITING CONFIRMATION
+
+Tekan tombol di bawah untuk konfirmasi sapi siap dijual.
+""",
+        reply_markup=markup
     )
+
+    # Simpan referensi pesan agar tombol bisa dihapus setelah dikonfirmasi
+    cursor.execute(
+        "INSERT INTO message_refs(ref_type, ref_id, chat_id, message_id) VALUES (?, ?, ?, ?)",
+        ("confirmsell", cow_code, msg.chat.id, msg.message_id)
+    )
+    conn.commit()
 
 
 # =========================
 # BOT START
 # =========================
 
+def resend_waiting_confirmations():
+    """Saat server nyala, kirim ulang notifikasi untuk sapi yang masih WAITING_CONFIRMATION."""
+    cursor.execute(
+        """
+        SELECT cow_code, barn, hash_id
+        FROM cows
+        WHERE status = 'WAITING_CONFIRMATION'
+        """
+    )
+    rows = cursor.fetchall()
+    if not rows:
+        return
+    print(f"[STARTUP] {len(rows)} sapi masih WAITING_CONFIRMATION, mengirim ulang notifikasi...")
+    for cow_code, barn, hash_id in rows:
+        if not barn or not hash_id:
+            continue
+        pic_id = BARN_TELEGRAM_IDS.get(barn.upper())
+        if pic_id:
+            send_sell_scan_request(pic_id, cow_code, barn.upper(), hash_id)
+            print(f"[STARTUP] Notifikasi ulang dikirim ke PIC kandang {barn} untuk sapi {cow_code}")
+
+
 def start_bot():
 
     print("Bot Running...")
+    resend_waiting_confirmations()
     bot.infinity_polling()
+
+
+# =========================
+# HELPER: HAPUS TOMBOL
+# =========================
+
+def clear_buttons(ref_type, ref_id):
+    """Edit semua pesan terkait ref_id agar tombolnya hilang."""
+    cursor.execute(
+        """
+        SELECT chat_id, message_id
+        FROM message_refs
+        WHERE ref_type = ? AND ref_id = ?
+        """,
+        (ref_type, ref_id)
+    )
+    rows = cursor.fetchall()
+    for (chat_id, message_id) in rows:
+        try:
+            bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=InlineKeyboardMarkup()
+            )
+        except Exception as e:
+            print(f"Gagal hapus tombol chat_id={chat_id} msg_id={message_id}: {e}")
+    cursor.execute(
+        "DELETE FROM message_refs WHERE ref_type = ? AND ref_id = ?",
+        (ref_type, ref_id)
+    )
+    conn.commit()
 
 
 # =========================
@@ -97,10 +215,10 @@ def send_new_cow(cow_id, owner):
     markup.add(btn_reject)
 
     for target in [ABYASA_ID, AXEL_ID]:
-
-        bot.send_message(
-            target,
-            f"""
+        try:
+            msg = bot.send_message(
+                target,
+                f"""
 🐄 PERMINTAAN KANDANG
 
 ID: {cow_id}
@@ -108,42 +226,47 @@ Pemilik: {owner}
 
 Apakah masih ada kapasitas?
 """,
-            reply_markup=markup
+                reply_markup=markup
+            )
+            # Simpan referensi pesan untuk hapus tombol nanti
+            cursor.execute(
+                "INSERT INTO message_refs(ref_type, ref_id, chat_id, message_id) VALUES (?, ?, ?, ?)",
+                ("cow_accept", cow_id, msg.chat.id, msg.message_id)
+            )
+            conn.commit()
+        except Exception as e:
+            print(f"Gagal mengirim permintaan kandang ke {target}: {e}")
+
+
+# =========================
+# SEND SELL SCAN REQUEST
+# =========================
+
+def send_sell_scan_request(chat_id, cow_code, barn, hash_id):
+    """Kirim notifikasi ke PIC kandang untuk scan QR Code eartag sapi."""
+
+    deep_link = f"https://t.me/{BOT_USERNAME}?start=CONFIRM_{cow_code}_{hash_id}"
+    
+    # Cetak ke terminal untuk keperluan development (generate QR code, dsb)
+    print("=" * 50)
+    print(f"🔗 [QR URL DEV] Sapi {cow_code}:")
+    print(deep_link)
+    print("=" * 50)
+
+    try:
+        bot.send_message(
+            chat_id,
+            f"""
+🔍 PERMINTAAN VERIFIKASI JUAL
+
+Sapi    : {cow_code}
+Kandang : {barn}
+
+Silakan scan QR Code pada eartag sapi untuk konfirmasi penjualan.
+"""
         )
-
-
-# =========================
-# PREPARE SALE
-# =========================
-
-def send_prepare_sale(chat_id, cow_id):
-
-    markup = InlineKeyboardMarkup()
-
-    btn_prepare = InlineKeyboardButton(
-        "🚚 Siap",
-        callback_data=f"prepare_{cow_id}"
-    )
-
-    btn_sold = InlineKeyboardButton(
-        "💰 Terjual",
-        callback_data=f"sold_{cow_id}"
-    )
-
-    markup.add(btn_prepare)
-    markup.add(btn_sold)
-
-    bot.send_message(
-        chat_id,
-        f"""
-🚚 SIAPKAN TERNAK
-
-ID: {cow_id}
-
-Pembeli akan datang.
-""",
-        reply_markup=markup
-    )
+    except Exception as e:
+        print(f"Gagal mengirim notifikasi scan QR ke {chat_id}: {e}")
 
 
 # =========================
@@ -169,9 +292,10 @@ def send_feed_order(chat_id, po_id, qty, price_per_kg):
     markup.add(btn_accept)
     markup.add(btn_reject)
 
-    bot.send_message(
-        chat_id,
-        f"""
+    try:
+        msg = bot.send_message(
+            chat_id,
+            f"""
 📦 PURCHASE ORDER
 
 PO ID        : {po_id}
@@ -181,8 +305,16 @@ Total Estimasi: Rp {total_price:,.0f}
 
 Mohon konfirmasi pesanan.
 """,
-        reply_markup=markup
-    )
+            reply_markup=markup
+        )
+        # Simpan referensi pesan untuk hapus tombol nanti
+        cursor.execute(
+            "INSERT INTO message_refs(ref_type, ref_id, chat_id, message_id) VALUES (?, ?, ?, ?)",
+            ("feed_order", po_id, msg.chat.id, msg.message_id)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Gagal mengirim feed order ke {chat_id}: {e}")
 
 
 # =========================
@@ -195,10 +327,7 @@ def callback_handler(call):
     # TERIMA SAPI
     if call.data.startswith("accept_"):
 
-        cow_id = call.data.replace(
-            "accept_",
-            ""
-        )
+        cow_id = call.data.replace("accept_", "")
 
         cursor.execute(
             """
@@ -220,6 +349,13 @@ def callback_handler(call):
 
         telegram_id = call.from_user.id
 
+        # Tentukan barn dari telegram_id
+        barn = None
+        for b, t_id in BARN_TELEGRAM_IDS.items():
+            if t_id == telegram_id:
+                barn = b
+                break
+
         if telegram_id == ABYASA_ID:
             caretaker = "ABYASA"
         elif telegram_id == AXEL_ID:
@@ -227,16 +363,21 @@ def callback_handler(call):
         else:
             caretaker = "UNKNOWN"
 
+        if not barn:
+            barn = "UNKNOWN"
+
         cursor.execute(
             """
             UPDATE cows
             SET caretaker = ?,
+                barn = ?,
                 status = ?
             WHERE cow_code = ?
             """,
             (
                 caretaker,
-                "WAITING_FOR_ARRIVAL",
+                barn,
+                "AVAILABLE",
                 cow_id
             )
         )
@@ -251,24 +392,34 @@ def callback_handler(call):
 ✅ {cow_id}
 
 Dialokasikan ke:
-{caretaker}
+Kandang {barn} ({caretaker})
 
 Status:
-WAITING_FOR_ARRIVAL
+AVAILABLE
 """
         )
 
-        print(
-            f"{cow_id} -> {caretaker}"
-        )
+        print(f"{cow_id} -> {caretaker}")
+
+        # Hapus tombol dari semua pesan terkait cow ini
+        clear_buttons("cow_accept", cow_id)
+
+        # Notifikasi pihak lain bahwa kandang sudah diambil
+        for other_id in [AXEL_ID, ABYASA_ID]:
+            if other_id != telegram_id:
+                try:
+                    bot.send_message(
+                        other_id,
+                        f"ℹ️ {cow_id} sudah diterima oleh {caretaker}.\n\nAnda tidak perlu melakukan tindakan apapun."
+                    )
+                except Exception as e:
+                    print(f"Gagal kirim notifikasi penerimaan ke {other_id}: {e}")
+
 
     # TOLAK / PENUH
     elif call.data.startswith("reject_"):
 
-        cow_id = call.data.replace(
-            "reject_",
-            ""
-        )
+        cow_id = call.data.replace("reject_", "")
 
         cursor.execute(
             """
@@ -296,76 +447,72 @@ WAITING_FOR_ARRIVAL
         print(f"{cow_id} REJECTED")
 
 
-    # SIAP JUAL
-    elif call.data.startswith("prepare_"):
+    # KONFIRMASI SIAP JUAL (via QR scan)
+    elif call.data.startswith("confirmsell_"):
 
-        cow_id = call.data.replace(
-            "prepare_",
-            ""
-        )
+        cow_code = call.data.replace("confirmsell_", "")
 
+        # Mutual exclusion: cek status terkini
         cursor.execute(
-            """
-            UPDATE cows
-            SET status = ?
-            WHERE cow_code = ?
-            """,
-            (
-                "READY_FOR_PICKUP",
-                cow_id
-            )
+            "SELECT status FROM cows WHERE cow_code = ?",
+            (cow_code,)
         )
+        row = cursor.fetchone()
 
+        if not row:
+            bot.answer_callback_query(call.id)
+            bot.send_message(call.message.chat.id, "❌ Sapi tidak ditemukan.")
+            return
+
+        current_status = row[0]
+
+        if current_status == "SOLD":
+            bot.answer_callback_query(call.id)
+            bot.send_message(
+                call.message.chat.id,
+                f"ℹ️ {cow_code} sudah terjual."
+            )
+            return
+
+        if current_status != "WAITING_CONFIRMATION":
+            bot.answer_callback_query(call.id)
+            bot.send_message(
+                call.message.chat.id,
+                f"⚠️ {cow_code} tidak sedang dalam proses konfirmasi (status: {current_status})."
+            )
+            return
+
+        # Update status → SOLD
+        cursor.execute(
+            "UPDATE cows SET status = ? WHERE cow_code = ?",
+            ("SOLD", cow_code)
+        )
         conn.commit()
 
         bot.answer_callback_query(call.id)
 
         bot.send_message(
             call.message.chat.id,
-            f"🚚 {cow_id} siap dijual."
+            f"""
+✅ Penjualan berhasil dikonfirmasi!
+
+Sapi   : {cow_code}
+Status : SOLD
+
+Sapi telah resmi terjual.
+"""
         )
 
-        print(f"{cow_id} READY_FOR_PICKUP")
+        print(f"{cow_code} SOLD (confirmed via QR)")
 
-    elif call.data.startswith("sold_"):
-
-        cow_id = call.data.replace(
-            "sold_",
-            ""
-        )
-
-        cursor.execute(
-            """
-            UPDATE cows
-            SET status = ?
-            WHERE cow_code = ?
-            """,
-            (
-                "SOLD",
-                cow_id
-            )
-        )
-
-        conn.commit()
-
-        bot.answer_callback_query(call.id)
-
-        bot.send_message(
-            call.message.chat.id,
-            f"💰 {cow_id} berhasil terjual."
-        )
-
-        print(f"{cow_id} SOLD")
-
+        # Hapus tombol konfirmasi
+        clear_buttons("confirmsell", cow_code)
 
 
     # PO DISETUJUI
     elif call.data.startswith("confirmpo_"):
 
-        po_id = call.data.replace(
-            "confirmpo_",
-            ""
-        )
+        po_id = call.data.replace("confirmpo_", "")
 
         # Cek apakah PO sudah diambil supplier lain
         cursor.execute(
@@ -414,6 +561,9 @@ WAITING_FOR_ARRIVAL
 
         print(f"{po_id} CONFIRMED by {supplier_name}")
 
+        # Hapus tombol dari semua pesan PO terkait
+        clear_buttons("feed_order", po_id)
+
         # Notify supplier lain bahwa PO sudah diambil
         cursor.execute(
             """
@@ -436,14 +586,10 @@ WAITING_FOR_ARRIVAL
                 print(f"Gagal kirim notifikasi ke {other_id}: {e}")
 
 
-
     # PO DITOLAK
     elif call.data.startswith("rejectpo_"):
 
-        po_id = call.data.replace(
-            "rejectpo_",
-            ""
-        )
+        po_id = call.data.replace("rejectpo_", "")
 
         cursor.execute(
             """

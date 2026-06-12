@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SPK Sapi</title>
+<style>
+    @page {
+        size: A4;
+        margin: 1.8cm 2.5cm 2cm 2.5cm;
+    }
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        color: #37474F;
+        font-size: 10pt;
+        line-height: 1.5;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-justify { text-align: justify; }
+    
+    .navy { color: #1B2B4B; }
+    .green { color: #2E7D32; }
+    .gray { color: #37474F; }
+    .light-gray { color: #B0BEC5; }
+    
+    .bold { font-weight: bold; }
+    
+    /* Kop Surat */
+    table.kop {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    .kop-logo {
+        width: 3.2cm;
+    }
+    .kop-title {
+        font-size: 15pt;
+        font-weight: bold;
+        color: #1B2B4B;
+        margin: 0;
+        padding: 0;
+    }
+    .kop-subtitle {
+        font-size: 9pt;
+        color: #37474F;
+        margin: 0;
+        padding: 0;
+    }
+    .hr-thick {
+        border-top: 3px solid #1B2B4B;
+        margin-top: 5px;
+        margin-bottom: 2px;
+    }
+    .hr-thin {
+        border-top: 1px solid #2E7D32;
+        margin-top: 0px;
+        margin-bottom: 15px;
+    }
+    
+    .doc-number {
+        font-size: 9pt;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    h2.title {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #1B2B4B;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 5px;
+    }
+    
+    h3.section-title {
+        font-size: 10pt;
+        font-weight: bold;
+        color: #1B2B4B;
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+    
+    p.opening, p.closing {
+        text-align: justify;
+        line-height: 1.5;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    
+    /* Tables */
+    table.details {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
+    table.details td {
+        padding: 4px;
+        vertical-align: top;
+    }
+    .label-col {
+        width: 4.2cm;
+    }
+    .colon-col {
+        width: 0.5cm;
+    }
+    
+    table.zebra {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
+    table.zebra th {
+        background-color: #1B2B4B;
+        color: white;
+        font-weight: bold;
+        padding: 6px;
+        text-align: center;
+        border: 1px solid #B0BEC5;
+    }
+    table.zebra td {
+        padding: 6px;
+        border: 1px solid #B0BEC5;
+    }
+    .row-even {
+        background-color: #E8F5E9;
+    }
+    
+    .status-badge {
+        background-color: #2E7D32;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 9pt;
+    }
+    
+    .signatures {
+        width: 100%;
+        margin-top: 30px;
+    }
+    .signatures td {
+        text-align: center;
+        width: 50%;
+    }
+    .sign-space {
+        height: 60px;
+    }
+    
+    .footer {
+        text-align: center;
+        color: #B0BEC5;
+        font-size: 7.5pt;
+        margin-top: 40px;
+    }
+</style>
+</head>
+<body>
+
+    <table class="kop">
+        <tr>
+            <td class="kop-logo">
+                {% if logo_path %}
+                <img src="{{ logo_path }}" width="100" />
+                {% endif %}
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+                <div class="kop-title">KOPERASI TERNAK MOOOS</div>
+                <div class="kop-subtitle">Digital Livestock Operating System</div>
+                <div class="kop-subtitle">Jl. Inovasi Peternakan No. 1, Indonesia &nbsp;|&nbsp; mooos.id &nbsp;|&nbsp; admin@mooos.id</div>
+            </td>
+        </tr>
+    </table>
+    <div class="hr-thick"></div>
+    <div class="hr-thin"></div>
+
+    <h2 class="title">SURAT KETERANGAN JUAL BELI TERNAK</h2>
+    <div class="doc-number">No. {{ doc_no }}</div>
+
+    <p class="opening">
+        Pada hari ini, tanggal <b>{{ now_str }}</b>, telah dilakukan pencatatan penjualan dan verifikasi sistem atas ternak dengan rincian sebagai berikut:
+    </p>
+
+    <h3 class="section-title">PIHAK PERTAMA (KOPERASI)</h3>
+    <table class="details">
+        <tr>
+            <td class="label-col">Nama / Platform</td>
+            <td class="colon-col">:</td>
+            <td class="bold">Sistem MooOS</td>
+        </tr>
+        <tr>
+            <td class="label-col">Status Verifikasi</td>
+            <td class="colon-col">:</td>
+            <td class="bold">TERVERIFIKASI &amp; TERCATAT DIGITAL</td>
+        </tr>
+    </table>
+
+    <h3 class="section-title">PIHAK KEDUA (PEMILIK TERNAK)</h3>
+    <table class="details">
+        <tr>
+            <td class="label-col">Nama Pemilik</td>
+            <td class="colon-col">:</td>
+            <td class="bold">{{ owner_name }}</td>
+        </tr>
+        <tr>
+            <td class="label-col">ID Kepemilikan</td>
+            <td class="colon-col">:</td>
+            <td class="bold">MOOOS-{{ cow_code.replace('-', '') }}</td>
+        </tr>
+    </table>
+
+    <h3 class="section-title">DETAIL TERNAK</h3>
+    <table class="zebra">
+        <tr>
+            <th>Spesifikasi</th>
+            <th>Keterangan</th>
+            <th>Status Sistem</th>
+        </tr>
+        <tr class="row-even">
+            <td><span class="gray">ID Sapi</span></td>
+            <td><span class="bold">{{ cow_code }}</span></td>
+            <td rowspan="4" class="text-center" style="vertical-align: middle;">
+                <span class="status-badge">{{ status_lbl }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="gray">Jenis / Ras</span></td>
+            <td><span class="bold">{{ jenis }}</span></td>
+        </tr>
+        <tr class="row-even">
+            <td><span class="gray">Perkiraan Umur</span></td>
+            <td><span class="bold">{{ umur }}</span></td>
+        </tr>
+        <tr>
+            <td><span class="gray">Bobot / Berat</span></td>
+            <td><span class="bold">{{ berat_str }}</span></td>
+        </tr>
+        <tr class="row-even">
+            <td><span class="gray">Tgl Registrasi</span></td>
+            <td colspan="2"><span class="bold">{{ tgl_masuk }}</span></td>
+        </tr>
+    </table>
+
+    <h3 class="section-title">DESKRIPSI TAMBAHAN</h3>
+    <p class="opening">
+        {{ deskripsi }}
+    </p>
+
+    <p class="closing">
+        Surat keterangan ini digenerate secara otomatis oleh sistem MooOS sebagai bukti sah bahwa ternak tersebut telah berhasil didata dan diselesaikan status penjualannya melalui platform. 
+        Segala bentuk komplain atau penyesuaian data dapat diajukan melalui aplikasi MooOS maksimal 3x24 jam sejak surat ini diterbitkan.
+    </p>
+
+    <table class="signatures">
+        <tr>
+            <td>Mengetahui,<br/><b>Sistem Administrator MooOS</b></td>
+            <td>Disetujui Oleh,<br/><b>Pihak Pemilik</b></td>
+        </tr>
+        <tr>
+            <td class="sign-space"></td>
+            <td class="sign-space"></td>
+        </tr>
+        <tr>
+            <td><b>( _______________________ )</b></td>
+            <td><b>( {{ owner_name }} )</b></td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        Generate by MooOS (Digital Livestock OS) &copy; {{ now_year }} - Dokumen Sah
+    </div>
+
+</body>
+</html>
