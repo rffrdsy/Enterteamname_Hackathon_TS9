@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Hasil | MooOS - Manajemen Ternak</title>
+</head>
+
+<body x-data="{ page: 'hasilMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+    class="bg-gray-50 text-gray-800">
+    <!-- ===== Preloader Start ===== -->
+    <include src="./partials/preloader.html"></include>
+    <!-- ===== Preloader End ===== -->
+
+    <!-- ===== Page Wrapper Start ===== -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- ===== Sidebar Start ===== -->
+        <include src="./partials/sidebar.html"></include>
+        <!-- ===== Sidebar End ===== -->
+
+        <!-- ===== Content Area Start ===== -->
+        <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+            <!-- Small Device Overlay Start -->
+            <include src="./partials/overlay.html" />
+            <!-- Small Device Overlay End -->
+
+            <!-- ===== Header Start ===== -->
+            <include src="./partials/header.html" />
+            <!-- ===== Header End ===== -->
+
+            <!-- ===== Main Content Start ===== -->
+            <main>
+                <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-6">
+
+                    <!-- 1. AREA HEADER -->
+                    <div class="space-y-1">
+                        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Hasil Produksi Susu</h1>
+                        <p class="text-sm text-gray-500">Pantau total produksi susu dari 20 sapi perah yang aktif.</p>
+                    </div>
+
+                    <!-- 2. GRID KARTU METRIK (3 Kolom) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Kartu 1 (Hari Ini) -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-3">
+                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Total
+                                Produksi Hari Ini</span>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-4xl font-bold text-emerald-600">320</span>
+                                <span class="text-sm font-semibold text-emerald-600">Liter</span>
+                            </div>
+                            <span class="block text-xs text-gray-400">Dari 20 ekor sapi</span>
+                        </div>
+
+                        <!-- Kartu 2 (Minggu Ini) -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-3">
+                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Total
+                                Produksi Minggu Ini</span>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-4xl font-bold text-blue-600">2.150</span>
+                                <span class="text-sm font-semibold text-blue-600">Liter</span>
+                            </div>
+                            <span class="block text-xs text-gray-400">Dari 20 ekor sapi</span>
+                        </div>
+
+                        <!-- Kartu 3 (Bulan Ini) -->
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-3">
+                            <span class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Total
+                                Produksi Bulan Ini</span>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-4xl font-bold text-purple-600">9.400</span>
+                                <span class="text-sm font-semibold text-purple-600">Liter</span>
+                            </div>
+                            <span class="block text-xs text-gray-400">Dari 20 ekor sapi</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. KARD TABEL (Rincian per Sapi) -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mt-8">
+                        <!-- Header Card -->
+                        <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-white">
+                            <h2 class="text-base font-bold text-slate-800">Rincian Produksi per Sapi</h2>
+                            <!-- Tombol Unduh Laporan -->
+                            <button
+                                class="inline-flex items-center justify-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="text-gray-550">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" x2="12" y1="15" y2="3" />
+                                </svg>
+                                <span>Unduh Laporan</span>
+                            </button>
+                        </div>
+
+                        <!-- Struktur Tabel -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-200 bg-gray-50/50">
+                                        <th
+                                            class="py-3 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            ID SAPI</th>
+                                        <th
+                                            class="py-3 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            STATUS SAPI</th>
+                                        <th
+                                            class="py-3 px-5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            JUMLAH PRODUKSI (LITER)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Row 1 -->
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td class="py-3.5 px-5 text-sm font-bold text-slate-800">SPI-0001</td>
+                                        <td class="py-3.5 px-5">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                                                Laktasi
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-5 text-sm font-semibold text-gray-700">18.5 Liter</td>
+                                    </tr>
+                                    <!-- Row 2 -->
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td class="py-3.5 px-5 text-sm font-bold text-slate-800">SPI-0002</td>
+                                        <td class="py-3.5 px-5">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                                                Laktasi
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-5 text-sm font-semibold text-gray-700">16 Liter</td>
+                                    </tr>
+                                    <!-- Row 3 -->
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td class="py-3.5 px-5 text-sm font-bold text-slate-800">SPI-0003</td>
+                                        <td class="py-3.5 px-5">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                                Kering Kandang
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-5 text-sm font-semibold text-gray-700">0 Liter</td>
+                                    </tr>
+                                    <!-- Row 4 -->
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td class="py-3.5 px-5 text-sm font-bold text-slate-800">SPI-0004</td>
+                                        <td class="py-3.5 px-5">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                                                Laktasi
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-5 text-sm font-semibold text-gray-700">18.5 Liter</td>
+                                    </tr>
+                                    <!-- Row 5 -->
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                                        <td class="py-3.5 px-5 text-sm font-bold text-slate-800">SPI-0005</td>
+                                        <td class="py-3.5 px-5">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                                Kering Kandang
+                                            </span>
+                                        </td>
+                                        <td class="py-3.5 px-5 text-sm font-semibold text-gray-700">0 Liter</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+            <!-- ===== Main Content End ===== -->
+        </div>
+        <!-- ===== Content Area End ===== -->
+    </div>
+    <!-- ===== Page Wrapper End ===== -->
+</body>
+
+</html>

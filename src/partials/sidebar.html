@@ -15,7 +15,9 @@
 
   </div>
   <div class="flex flex-col justify-between h-full overflow-y-auto duration-300 ease-linear no-scrollbar pb-6">
-    <nav x-data="{ selected: window.location.pathname.includes('anggota') ? 'Anggota' : (window.location.pathname.includes('ternak') || window.location.pathname.includes('detail_sapi')) ? 'Ternak' : window.location.pathname.includes('pakan') ? 'Pakan' : window.location.pathname.includes('transaksi') ? 'Transaksi' : window.location.pathname.includes('laporan') ? 'Laporan' : window.location.pathname.includes('pengaturan') ? 'Pengaturan' : window.location.pathname.includes('bantuan') ? 'Bantuan' : 'Dashboard' }" class="flex flex-col justify-between flex-1">
+    <nav
+      x-data="{ selected: window.location.pathname.includes('anggota') ? 'Anggota' : (window.location.pathname.includes('ternak') || window.location.pathname.includes('detail_sapi')) ? 'Ternak' : window.location.pathname.includes('hasil') ? 'Hasil' : window.location.pathname.includes('pakan') ? 'Pakan' : window.location.pathname.includes('transaksi') ? 'Transaksi' : window.location.pathname.includes('laporan') ? 'Laporan' : window.location.pathname.includes('pengaturan') ? 'Pengaturan' : window.location.pathname.includes('bantuan') ? 'Bantuan' : 'Dashboard' }"
+      class="flex flex-col justify-between flex-1">
 
       <div>
         <h3 class="mb-4 text-xs uppercase leading-[20px] text-gray-400">
@@ -27,9 +29,9 @@
         <ul class="flex flex-col gap-2">
 
           <li>
-            <a href="dashboard_MooOS.html"
+            <a href="index.html"
               class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
-              :class="selected === 'Dashboard' ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 dark:bg-slate-800/80 dark:border-blue-500 dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              :class="selected === 'Dashboard' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="7" height="9" x="3" y="3" rx="1" />
@@ -44,7 +46,7 @@
           <li>
             <a href="anggota_MooOS.html"
               class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
-              :class="selected === 'Anggota' ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 dark:bg-slate-800/80 dark:border-blue-500 dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              :class="selected === 'Anggota' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -59,7 +61,7 @@
           <li>
             <a href="ternak_MooOS.html"
               class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
-              :class="selected === 'Ternak' ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 dark:bg-slate-800/80 dark:border-blue-500 dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              :class="selected === 'Ternak' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 9c0-3 3-5 7-5s7 2 7 5a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6z" />
@@ -74,9 +76,23 @@
           </li>
 
           <li>
+            <a href="hasil_MooOS.html"
+              class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
+              :class="selected === 'Hasil' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+              </svg>
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Hasil</span>
+            </a>
+          </li>
+
+          <li>
             <a href="pakan_MooOS.html"
               class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
-              :class="selected === 'Pakan' ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 dark:bg-slate-800/80 dark:border-blue-500 dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              :class="selected === 'Pakan' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22v-8" />
@@ -90,7 +106,7 @@
           <li>
             <a href="transaksi_MooOS.html"
               class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
-              :class="selected === 'Transaksi' ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 dark:bg-slate-800/80 dark:border-blue-500 dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              :class="selected === 'Transaksi' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="20" height="14" x="2" y="5" rx="2" />
@@ -103,7 +119,7 @@
           <li>
             <a href="laporan_MooOS.html"
               class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
-              :class="selected === 'Laporan' ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 dark:bg-slate-800/80 dark:border-blue-500 dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              :class="selected === 'Laporan' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -131,7 +147,7 @@
           <li>
             <a href="pengaturan_MooOS.html"
               class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
-              :class="selected === 'Pengaturan' ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 dark:bg-slate-800/80 dark:border-blue-500 dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              :class="selected === 'Pengaturan' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3" />
@@ -145,7 +161,7 @@
           <li>
             <a href="bantuan_MooOS.html"
               class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
-              :class="selected === 'Bantuan' ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 dark:bg-slate-800/80 dark:border-blue-500 dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              :class="selected === 'Bantuan' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />

@@ -1,310 +1,409 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
-    />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Ternak | MooOS - Manajemen Ternak</title>
-  </head>
-  <body
-    x-data="{ page: 'ternakMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
-    class="bg-gray-50 text-gray-800"
-  >
-    <!-- ===== Preloader Start ===== -->
-    <include src="./partials/preloader.html"></include>
-    <!-- ===== Preloader End ===== -->
 
-    <!-- ===== Page Wrapper Start ===== -->
-    <div class="flex h-screen overflow-hidden">
-      <!-- ===== Sidebar Start ===== -->
-      <include src="./partials/sidebar.html"></include>
-      <!-- ===== Sidebar End ===== -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Ternak | MooOS - Manajemen Ternak</title>
+</head>
 
-      <!-- ===== Content Area Start ===== -->
-      <div
-        class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto"
-      >
-        <!-- Small Device Overlay Start -->
-        <include src="./partials/overlay.html" />
-        <!-- Small Device Overlay End -->
+<body x-data="{ page: 'ternakMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+  class="bg-gray-50 text-gray-800">
+  <!-- ===== Preloader Start ===== -->
+  <include src="./partials/preloader.html"></include>
+  <!-- ===== Preloader End ===== -->
 
-        <!-- ===== Header Start ===== -->
-        <include src="./partials/header.html" />
-        <!-- ===== Header End ===== -->
+  <!-- ===== Page Wrapper Start ===== -->
+  <div class="flex h-screen overflow-hidden">
+    <!-- ===== Sidebar Start ===== -->
+    <include src="./partials/sidebar.html"></include>
+    <!-- ===== Sidebar End ===== -->
 
-        <!-- ===== Main Content Start ===== -->
-        <main>
-          <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-6">
-            
-            <!-- Area Header -->
-            <div class="flex items-center justify-between">
-              <div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Ternak</h1>
-                <p class="text-sm text-gray-500 mt-1">Daftar lengkap dan status seluruh ternak sapi</p>
-              </div>
+    <!-- ===== Content Area Start ===== -->
+    <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+      <!-- Small Device Overlay Start -->
+      <include src="./partials/overlay.html" />
+      <!-- Small Device Overlay End -->
+
+      <!-- ===== Header Start ===== -->
+      <include src="./partials/header.html" />
+      <!-- ===== Header End ===== -->
+
+      <!-- ===== Main Content Start ===== -->
+      <main>
+        <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-6">
+
+          <!-- Area Header -->
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Ternak</h1>
+              <p class="text-sm text-gray-500 mt-1">Daftar lengkap dan status seluruh ternak sapi</p>
             </div>
-
-            <!-- 3. CARD UTAMA (Direktori Ternak) -->
-            <div class="bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
-              
-              <!-- Card Header -->
-              <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 p-5 bg-white">
-                <h2 class="text-base font-semibold text-slate-800">Direktori Ternak</h2>
-                
-                <div class="flex items-center gap-3">
-                  <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                    <span>Filter</span>
-                  </button>
-                  <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                    <span>Ekspor</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Tabel Data -->
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                  <thead>
-                    <tr class="border-b border-gray-100 bg-gray-50/50">
-                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID Sapi</th>
-                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Pemilik</th>
-                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Detail Ternak</th>
-                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tgl Masuk</th>
-                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-100">
-                    
-                    <!-- Row 1: Aktif -->
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                      <td class="p-4 text-sm font-mono text-gray-500">SPI-0001</td>
-                      <td class="p-4">
-                        <div class="flex items-center gap-3">
-                          <div class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">
-                            BS
-                          </div>
-                          <span class="text-sm font-medium text-slate-800">Budi Santoso</span>
-                        </div>
-                      </td>
-                      <td class="p-4">
-                        <span class="block text-sm font-semibold text-slate-800">Limousin</span>
-                        <span class="block text-xs text-gray-400 mt-0.5">2 Tahun • 450 kg</span>
-                      </td>
-                      <td class="p-4 text-sm text-gray-600">12 Okt 2023</td>
-                      <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                          Aktif
-                        </span>
-                      </td>
-                      <td class="p-4 text-right">
-                        <a href="detail_sapi_MooOS.html" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors hover:underline">
-                          See Details
-                        </a>
-                      </td>
-                    </tr>
-
-                    <!-- Row 2: Menunggu Verifikasi -->
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                      <td class="p-4 text-sm font-mono text-gray-500">SPI-0002</td>
-                      <td class="p-4">
-                        <div class="flex items-center gap-3">
-                          <div class="w-9 h-9 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
-                            SA
-                          </div>
-                          <span class="text-sm font-medium text-slate-800">Siti Aminah</span>
-                        </div>
-                      </td>
-                      <td class="p-4">
-                        <span class="block text-sm font-semibold text-slate-800">Simmental</span>
-                        <span class="block text-xs text-gray-400 mt-0.5">1.5 Tahun • 380 kg</span>
-                      </td>
-                      <td class="p-4 text-sm text-gray-600">15 Nov 2023</td>
-                      <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200">
-                          Menunggu Verifikasi
-                        </span>
-                      </td>
-                      <td class="p-4 text-right">
-                        <a href="detail_sapi_MooOS.html" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors hover:underline">
-                          See Details
-                        </a>
-                      </td>
-                    </tr>
-
-                    <!-- Row 3: Bunting -->
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                      <td class="p-4 text-sm font-mono text-gray-500">SPI-0003</td>
-                      <td class="p-4">
-                        <div class="flex items-center gap-3">
-                          <div class="w-9 h-9 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-sm shrink-0">
-                            AW
-                          </div>
-                          <span class="text-sm font-medium text-slate-800">Andi Wijaya</span>
-                        </div>
-                      </td>
-                      <td class="p-4">
-                        <span class="block text-sm font-semibold text-slate-800">Sapi Bali</span>
-                        <span class="block text-xs text-gray-400 mt-0.5">3 Tahun • 500 kg</span>
-                      </td>
-                      <td class="p-4 text-sm text-gray-600">20 Jul 2023</td>
-                      <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                          Bunting
-                        </span>
-                      </td>
-                      <td class="p-4 text-right">
-                        <a href="detail_sapi_MooOS.html" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors hover:underline">
-                          See Details
-                        </a>
-                      </td>
-                    </tr>
-
-                    <!-- Row 4: Sakit -->
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                      <td class="p-4 text-sm font-mono text-gray-500">SPI-0004</td>
-                      <td class="p-4">
-                        <div class="flex items-center gap-3">
-                          <div class="w-9 h-9 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0">
-                            DL
-                          </div>
-                          <span class="text-sm font-medium text-slate-800">Dewi Lestari</span>
-                        </div>
-                      </td>
-                      <td class="p-4">
-                        <span class="block text-sm font-semibold text-slate-800">PO (Peranakan Ongole)</span>
-                        <span class="block text-xs text-gray-400 mt-0.5">2.5 Tahun • 420 kg</span>
-                      </td>
-                      <td class="p-4 text-sm text-gray-600">05 Des 2023</td>
-                      <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                          Sakit
-                        </span>
-                      </td>
-                      <td class="p-4 text-right">
-                        <a href="detail_sapi_MooOS.html" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors hover:underline">
-                          See Details
-                        </a>
-                      </td>
-                    </tr>
-
-                    <!-- Row 5: Terjual -->
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                      <td class="p-4 text-sm font-mono text-gray-500">SPI-0005</td>
-                      <td class="p-4">
-                        <div class="flex items-center gap-3">
-                          <div class="w-9 h-9 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-sm shrink-0">
-                            EP
-                          </div>
-                          <span class="text-sm font-medium text-slate-800">Eko Prasetyo</span>
-                        </div>
-                      </td>
-                      <td class="p-4">
-                        <span class="block text-sm font-semibold text-slate-800">Limousin</span>
-                        <span class="block text-xs text-gray-400 mt-0.5">4 Tahun • 620 kg</span>
-                      </td>
-                      <td class="p-4 text-sm text-gray-600">01 Jun 2023</td>
-                      <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                          Terjual
-                        </span>
-                      </td>
-                      <td class="p-4 text-right">
-                        <a href="detail_sapi_MooOS.html" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors hover:underline">
-                          See Details
-                        </a>
-                      </td>
-                    </tr>
-
-                    <!-- Row 6: Non-aktif -->
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                      <td class="p-4 text-sm font-mono text-gray-500">SPI-0006</td>
-                      <td class="p-4">
-                        <div class="flex items-center gap-3">
-                          <div class="w-9 h-9 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-sm shrink-0">
-                            FA
-                          </div>
-                          <span class="text-sm font-medium text-slate-800">Farhan Aditya</span>
-                        </div>
-                      </td>
-                      <td class="p-4">
-                        <span class="block text-sm font-semibold text-slate-800">Madura</span>
-                        <span class="block text-xs text-gray-400 mt-0.5">1 Tahun • 280 kg</span>
-                      </td>
-                      <td class="p-4 text-sm text-gray-600">18 Jan 2024</td>
-                      <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                          Non-aktif
-                        </span>
-                      </td>
-                      <td class="p-4 text-right">
-                        <a href="detail_sapi_MooOS.html" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors hover:underline">
-                          See Details
-                        </a>
-                      </td>
-                    </tr>
-
-                    <!-- Row 7: Mati -->
-                    <tr class="hover:bg-gray-50/50 transition-colors">
-                      <td class="p-4 text-sm font-mono text-gray-500">SPI-0007</td>
-                      <td class="p-4">
-                        <div class="flex items-center gap-3">
-                          <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">
-                            GW
-                          </div>
-                          <span class="text-sm font-medium text-slate-800">Gunawan Wibisono</span>
-                        </div>
-                      </td>
-                      <td class="p-4">
-                        <span class="block text-sm font-semibold text-slate-800">Simmental</span>
-                        <span class="block text-xs text-gray-400 mt-0.5">2 Tahun • 460 kg</span>
-                      </td>
-                      <td class="p-4 text-sm text-gray-600">10 Sep 2023</td>
-                      <td class="p-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-600 text-white border border-slate-700">
-                          Mati
-                        </span>
-                      </td>
-                      <td class="p-4 text-right">
-                        <a href="detail_sapi_MooOS.html" class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors hover:underline">
-                          See Details
-                        </a>
-                      </td>
-                    </tr>
-
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Pagination Footer -->
-              <div class="flex items-center justify-between border-t border-gray-100 p-5 bg-white">
-                <span class="text-sm text-gray-500">
-                  Menampilkan 1-7 dari 7 ternak
-                </span>
-                
-                <div class="flex items-center gap-2">
-                  <button class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:pointer-events-none" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                  </button>
-                  <button class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:pointer-events-none" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                  </button>
-                </div>
-              </div>
-
-            </div>
-
           </div>
-        </main>
-        <!-- ===== Main Content End ===== -->
-      </div>
-      <!-- ===== Content Area End ===== -->
+
+          <!-- CARD UTAMA (Direktori Ternak) -->
+          <div class="bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden">
+
+            <!-- Card Header -->
+            <div
+              class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 p-5 bg-white">
+              <h2 class="text-base font-semibold text-slate-800">Direktori Ternak</h2>
+              <div class="flex items-center gap-3">
+                <button
+                  class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                  </svg>
+                  <span>Filter</span>
+                </button>
+                <button
+                  class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                  <span>Ekspor</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tabel Data -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-gray-100 bg-gray-50/50">
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID Sapi</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Kandang</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Pemilik</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Berat</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="ternak-tbody" class="divide-y divide-gray-100">
+                  <!-- Loading state -->
+                  <tr id="ternak-loading">
+                    <td colspan="6" class="p-8 text-center text-sm text-gray-400">
+                      <div class="flex items-center justify-center gap-2">
+                        <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                          viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                          </circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        Memuat data ternak...
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination Footer -->
+            <div class="flex items-center justify-between border-t border-gray-100 p-5 bg-white">
+              <span id="ternak-count" class="text-sm text-gray-500">Memuat...</span>
+              <div class="flex items-center gap-2">
+                <button
+                  class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </button>
+                <button
+                  class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+      <!-- ===== Main Content End ===== -->
     </div>
-    <!-- ===== Page Wrapper End ===== -->
-  </body>
+    <!-- ===== Content Area End ===== -->
+  </div>
+  <!-- ===== Page Wrapper End ===== -->
+
+  <!-- ===== MODAL JUAL TERNAK (inline) ===== -->
+  <div id="modal-jual"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-xl shadow-2xl border border-gray-100 w-full max-w-md p-6 md:p-8 space-y-6">
+
+      <!-- STATE 1: FORM -->
+      <form id="modal-form-view" class="space-y-6" onsubmit="submitJualTernak(event)">
+        <div class="flex items-center gap-3.5 border-b border-gray-100 pb-4">
+          <div class="w-11 h-11 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800 tracking-tight">Data Pembeli Pihak II</h2>
+            <p id="modal-cow-label" class="text-xs text-gray-400">Masukkan identitas lengkap pembeli ternak</p>
+          </div>
+        </div>
+
+        <!-- Error alert -->
+        <div id="modal-error" class="hidden rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700"></div>
+
+        <!-- Form Inputs -->
+        <div class="space-y-4">
+          <!-- Nama Lengkap -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-semibold text-slate-700">Nama Lengkap</label>
+            <input type="text" required placeholder="Masukkan nama sesuai KTP"
+              class="w-full border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm transition-colors" />
+          </div>
+
+          <!-- NIK -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-semibold text-slate-700">Nomor Induk Kependudukan (NIK)</label>
+            <input type="text" required pattern="\d{16}" title="NIK harus berjumlah 16 digit angka"
+              placeholder="16 digit NIK"
+              class="w-full border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm transition-colors" />
+          </div>
+
+          <!-- Alamat Lengkap -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-semibold text-slate-700">Alamat Lengkap</label>
+            <textarea required rows="3" placeholder="Jalan, RT/RW, Desa..."
+              class="w-full border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm transition-colors resize-none"></textarea>
+          </div>
+
+          <!-- No. Telepon / WhatsApp -->
+          <div class="space-y-1.5">
+            <label class="text-sm font-semibold text-slate-700">No. Telepon / WhatsApp</label>
+            <input type="text" required placeholder="08..."
+              class="w-full border border-gray-300 rounded-md p-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm transition-colors" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+          <button type="button" onclick="closeJualModal()"
+            class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none">
+            Batal
+          </button>
+          <button id="btn-konfirmasi-jual" type="submit"
+            class="inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-sm font-semibold transition-colors focus:outline-none shadow-sm">
+            Jual
+          </button>
+        </div>
+      </form>
+
+      <!-- STATE 2: SUCCESS -->
+      <div id="modal-success-view" class="hidden flex flex-col items-center text-center space-y-4 py-4">
+        <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-xl font-bold text-slate-800">Pengajuan Sedang Diproses</h3>
+          <p class="text-sm text-gray-500 max-w-xs leading-relaxed">
+            Notifikasi verifikasi telah dikirim ke PIC kandang via Telegram. Status sapi berubah ke <strong>Menunggu
+              Konfirmasi</strong>.
+          </p>
+        </div>
+        <div class="w-full pt-4">
+          <button type="button" onclick="closeJualModal(); loadTernak();"
+            class="w-full inline-flex items-center justify-center rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2.5 text-sm font-semibold transition-colors focus:outline-none">
+            Selesai
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- ===== END MODAL ===== -->
+
+  <script>
+    const API = 'http://localhost:8000';
+    let activeCowCode = null;
+
+    // ── Status badge helper ────────────────────────────────────────────────
+    function statusBadge(status) {
+      const map = {
+        'AVAILABLE': { label: 'Tersedia', cls: 'bg-green-50 text-green-700 border-green-200' },
+        'LOOKING_FOR_CARETAKER': { label: 'Mencari Perawat', cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+        'WAITING_CONFIRMATION': { label: 'Menunggu Konfirmasi', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+        'SOLD': { label: 'Terjual', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+        'REJECTED': { label: 'Ditolak', cls: 'bg-red-50 text-red-700 border-red-200' },
+      };
+      const s = map[status] || { label: status, cls: 'bg-gray-100 text-gray-600 border-gray-200' };
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${s.cls}">${s.label}</span>`;
+    }
+
+    // ── Load cows from backend ─────────────────────────────────────────────
+    async function loadTernak() {
+      const tbody = document.getElementById('ternak-tbody');
+      const countEl = document.getElementById('ternak-count');
+
+      tbody.innerHTML = `
+          <tr id="ternak-loading">
+            <td colspan="6" class="p-8 text-center text-sm text-gray-400">
+              <div class="flex items-center justify-center gap-2">
+                <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                Memuat data ternak...
+              </div>
+            </td>
+          </tr>`;
+
+      try {
+        const res = await fetch(`${API}/cows`);
+        if (!res.ok) throw new Error('Gagal memuat data');
+        const cows = await res.json();
+
+        if (cows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-sm text-gray-400">Belum ada data ternak.</td></tr>`;
+          countEl.textContent = 'Tidak ada data';
+          return;
+        }
+
+        countEl.textContent = `Menampilkan ${cows.length} ternak`;
+        tbody.innerHTML = cows.map(cow => {
+          const initials = (cow.owner_name || cow.caretaker || '??').slice(0, 2).toUpperCase();
+          const avatarColors = ['bg-emerald-50 text-emerald-700', 'bg-blue-50 text-blue-700', 'bg-amber-50 text-amber-700', 'bg-purple-50 text-purple-700', 'bg-teal-50 text-teal-700'];
+          const avatarCls = avatarColors[cow.id % avatarColors.length];
+          const ownerDisplay = cow.owner_name || cow.caretaker;
+
+          return `
+              <tr onclick="window.location.href='detail_sapi_MooOS.html?code=${cow.cow_code}'" class="hover:bg-gray-50/50 transition-colors cursor-pointer">
+                <td class="p-4 text-sm font-mono text-gray-500">${cow.cow_code}</td>
+                <td class="p-4">
+                  <span class="text-sm font-medium text-slate-800">${cow.barn || '—'}</span>
+                </td>
+                <td class="p-4">
+                  ${ownerDisplay ? `
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full ${avatarCls} flex items-center justify-center font-bold text-xs shrink-0">${initials}</div>
+                    <span class="text-sm text-slate-700">${ownerDisplay}</span>
+                  </div>` : `<span class="text-sm text-gray-400">—</span>`}
+                </td>
+                <td class="p-4 text-sm text-gray-600">${cow.weight ? cow.weight + ' kg' : '—'}</td>
+                <td class="p-4">${statusBadge(cow.status)}</td>
+                <td class="p-4 text-right">
+                  <span class="text-blue-600 hover:text-blue-800 text-xs font-semibold inline-flex items-center gap-1">
+                    Detail
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </span>
+                </td>
+              </tr>`;
+        }).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-sm text-red-500">⚠️ Gagal memuat data: ${err.message}. Pastikan backend berjalan di port 8000.</td></tr>`;
+        countEl.textContent = 'Error';
+      }
+    }
+
+    // ── Modal helpers ──────────────────────────────────────────────────────
+    function openJualModal(cowCode) {
+      activeCowCode = cowCode;
+      document.getElementById('modal-cow-label').textContent = `Sapi: ${cowCode}`;
+      document.getElementById('modal-form-view').classList.remove('hidden');
+      document.getElementById('modal-success-view').classList.add('hidden');
+      document.getElementById('modal-error').classList.add('hidden');
+      document.getElementById('modal-error').textContent = '';
+      document.getElementById('btn-konfirmasi-jual').disabled = false;
+      document.getElementById('btn-konfirmasi-jual').textContent = 'Jual';
+      document.getElementById('modal-form-view').reset();
+      document.getElementById('modal-jual').classList.remove('hidden');
+    }
+
+    function closeJualModal() {
+      document.getElementById('modal-jual').classList.add('hidden');
+      activeCowCode = null;
+    }
+
+    async function submitJualTernak(e) {
+      if (e) e.preventDefault();
+      if (!activeCowCode) return;
+
+      const btn = document.getElementById('btn-konfirmasi-jual');
+      const errEl = document.getElementById('modal-error');
+      btn.disabled = true;
+      btn.textContent = 'Memproses...';
+      errEl.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API}/sell-cow`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cow_code: activeCowCode }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          errEl.textContent = data.detail || 'Terjadi kesalahan, coba lagi.';
+          errEl.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Jual';
+          return;
+        }
+
+        // Show success state
+        document.getElementById('modal-form-view').classList.add('hidden');
+        document.getElementById('modal-success-view').classList.remove('hidden');
+
+      } catch (err) {
+        errEl.textContent = `Koneksi gagal: ${err.message}`;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Jual';
+      }
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('modal-jual').addEventListener('click', function (e) {
+      if (e.target === this) closeJualModal();
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', loadTernak);
+  </script>
+</body>
+
+</html>
+document.getElementById('success-cow-code').textContent = activeCowCode;
+document.getElementById('success-volume').textContent = vol + ' Liter';
+
+document.getElementById('modal-form-view').classList.add('hidden');
+document.getElementById('modal-success-view').classList.remove('hidden');
+} catch (err) {
+errEl.textContent = `Gagal menyimpan data: ${err.message}`;
+errEl.classList.remove('hidden');
+btn.disabled = false;
+btn.textContent = 'Simpan Data Peras';
+}
+}
+
+// Close modal on backdrop click
+document.getElementById('modal-peras').addEventListener('click', function(e) {
+if (e.target === this) closePerasModal();
+});
+
+// ── Init ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', loadTernak);
+</script>
+</body>
+
 </html>
