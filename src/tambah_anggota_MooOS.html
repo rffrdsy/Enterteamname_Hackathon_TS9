@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Tambah Anggota | MooOS - Manajemen Ternak</title>
+  </head>
+  <body
+    x-data="{ page: 'anggotaMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+    class="bg-gray-50 text-gray-800"
+  >
+    <!-- ===== Preloader Start ===== -->
+    <include src="./partials/preloader.html"></include>
+    <!-- ===== Preloader End ===== -->
+
+    <!-- ===== Page Wrapper Start ===== -->
+    <div class="flex h-screen overflow-hidden">
+      <!-- ===== Sidebar Start ===== -->
+      <include src="./partials/sidebar.html"></include>
+      <!-- ===== Sidebar End ===== -->
+
+      <!-- ===== Content Area Start ===== -->
+      <div
+        class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto"
+      >
+        <!-- Small Device Overlay Start -->
+        <include src="./partials/overlay.html" />
+        <!-- Small Device Overlay End -->
+
+        <!-- ===== Header Start ===== -->
+        <include src="./partials/header.html" />
+        <!-- ===== Header End ===== -->
+
+        <!-- ===== Main Content Start ===== -->
+        <main>
+          <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-6" x-data="{ 
+            nama: '', 
+            alamat: '', 
+            telepon: '', 
+            status: 'Penitip Ternak', 
+            showModal: false, 
+            successMsg: '',
+            submitForm() {
+              if (!this.nama || !this.alamat || !this.telepon) {
+                alert('Mohon lengkapi semua data formulir!');
+                return;
+              }
+              const randomNumber = Math.floor(1000 + Math.random() * 9000);
+              if (this.status === 'Penanggungjawab Ternak') {
+                this.successMsg = 'Pengguna berhasil terdaftar pada sistem koperasi dengan ID: PNG-' + randomNumber;
+              } else {
+                this.successMsg = 'Pengguna berhasil terdaftar pada sistem koperasi dengan ID: PNT-' + randomNumber;
+              }
+              this.showModal = true;
+            },
+            resetForm() {
+              this.nama = '';
+              this.alamat = '';
+              this.telepon = '';
+              this.status = 'Penitip Ternak';
+              this.showModal = false;
+            }
+          }">
+            
+            <!-- Area Header -->
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Pendaftaran Anggota</h1>
+                <p class="text-sm text-gray-500 mt-1">Daftarkan anggota baru ke dalam sistem MooOS</p>
+              </div>
+            </div>
+
+            <!-- 1. CARD FORMULIR -->
+            <div class="bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden max-w-3xl">
+              <!-- Header Card -->
+              <div class="flex items-center gap-3 border-b border-gray-100 p-5">
+                <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+                </div>
+                <div>
+                  <h2 class="text-base font-semibold text-slate-800">Pendaftaran Baru</h2>
+                  <p class="text-xs text-gray-400">Isi data calon anggota dengan benar</p>
+                </div>
+              </div>
+
+              <!-- Form Body -->
+              <form class="p-6 space-y-5" @submit.prevent="submitForm()">
+                <!-- Field 1: Nama Lengkap -->
+                <div class="space-y-1.5">
+                  <label class="text-sm font-medium text-gray-700">Nama Lengkap</label>
+                  <input 
+                    type="text" 
+                    x-model="nama" 
+                    placeholder="Masukkan nama lengkap" 
+                    class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                  />
+                </div>
+
+                <!-- Field 2: Alamat -->
+                <div class="space-y-1.5">
+                  <label class="text-sm font-medium text-gray-700">Alamat</label>
+                  <textarea 
+                    x-model="alamat" 
+                    rows="3" 
+                    placeholder="Masukkan alamat lengkap" 
+                    class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                  ></textarea>
+                </div>
+
+                <!-- Field 3: No Telepon -->
+                <div class="space-y-1.5">
+                  <label class="text-sm font-medium text-gray-700">No Telepon</label>
+                  <input 
+                    type="text" 
+                    x-model="telepon" 
+                    placeholder="08xx-xxxx-xxxx" 
+                    class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                  />
+                </div>
+
+                <!-- Field 4: Status Keanggotaan -->
+                <div class="space-y-1.5">
+                  <label class="text-sm font-medium text-gray-700">Status Keanggotaan</label>
+                  <select 
+                    x-model="status" 
+                    class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                  >
+                    <option value="Penitip Ternak">Penitip Ternak</option>
+                    <option value="Penanggungjawab Ternak">Penanggungjawab Ternak</option>
+                  </select>
+                </div>
+
+                <!-- Footer Card Buttons -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                  <a 
+                    href="anggota_MooOS.html" 
+                    class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none"
+                  >
+                    Batal
+                  </a>
+                  <button 
+                    type="submit" 
+                    class="inline-flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+                  >
+                    Simpan Anggota
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 2. CARD STATISTIK -->
+            <div class="bg-white border border-gray-100 rounded-xl shadow-xs p-6 max-w-3xl">
+              <div class="grid grid-cols-2 divide-x divide-gray-100">
+                <!-- Kolom Kiri -->
+                <div class="pr-6">
+                  <span class="text-xs font-medium text-gray-400 uppercase tracking-wider block">Total Anggota</span>
+                  <span class="text-3xl font-bold text-emerald-600 mt-1 block">142</span>
+                </div>
+                <!-- Kolom Kanan -->
+                <div class="pl-6">
+                  <span class="text-xs font-medium text-gray-400 uppercase tracking-wider block">Aktif Bulan Ini</span>
+                  <span class="text-3xl font-bold text-amber-700 mt-1 block">+12</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. POP-UP MODAL (Berhasil Mendaftar) -->
+            <div 
+              class="fixed inset-0 z-99999 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4" 
+              x-show="showModal" 
+              x-transition 
+              style="display: none;"
+            >
+              <div class="bg-white rounded-xl shadow-xl border border-gray-100 w-full max-w-md p-6 flex flex-col items-center text-center">
+                <!-- Checklist Success Icon -->
+                <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                
+                <h3 class="text-lg font-bold text-slate-800">Pendaftaran Berhasil!</h3>
+                <p id="success-message" class="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed" x-text="successMsg"></p>
+                
+                <div class="flex items-center gap-3 w-full mt-6">
+                  <button 
+                    @click="resetForm()" 
+                    class="flex-1 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none"
+                  >
+                    Tutup
+                  </button>
+                  <a 
+                    href="anggota_MooOS.html" 
+                    class="flex-1 inline-flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none"
+                  >
+                    Ke Direktori
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </main>
+        <!-- ===== Main Content End ===== -->
+      </div>
+      <!-- ===== Content Area End ===== -->
+    </div>
+    <!-- ===== Page Wrapper End ===== -->
+  </body>
+</html>
