@@ -15,7 +15,7 @@
 
   </div>
   <div class="flex flex-col justify-between h-full overflow-y-auto duration-300 ease-linear no-scrollbar pb-6">
-    <nav x-data="{ selected: window.location.pathname.includes('anggota') ? 'Anggota' : window.location.pathname.includes('ternak') ? 'Ternak' : window.location.pathname.includes('pakan') ? 'Pakan' : window.location.pathname.includes('transaksi') ? 'Transaksi' : window.location.pathname.includes('laporan') ? 'Laporan' : window.location.pathname.includes('pengaturan') ? 'Pengaturan' : window.location.pathname.includes('bantuan') ? 'Bantuan' : 'Dashboard' }" class="flex flex-col justify-between flex-1">
+    <nav x-data="{ selected: window.location.pathname.includes('anggota') ? 'Anggota' : (window.location.pathname.includes('ternak') || window.location.pathname.includes('detail_sapi')) ? 'Ternak' : window.location.pathname.includes('pakan') ? 'Pakan' : window.location.pathname.includes('transaksi') ? 'Transaksi' : window.location.pathname.includes('laporan') ? 'Laporan' : window.location.pathname.includes('pengaturan') ? 'Pengaturan' : window.location.pathname.includes('bantuan') ? 'Bantuan' : 'Dashboard' }" class="flex flex-col justify-between flex-1">
 
       <div>
         <h3 class="mb-4 text-xs uppercase leading-[20px] text-gray-400">
