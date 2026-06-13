@@ -1,12 +1,12 @@
 import time
 import uuid
-import threading
-import sqlite3
-import uvicorn
 import os
 import mimetypes
 import qrcode
 import datetime
+import threading
+import sqlite3
+import uvicorn
 from io import BytesIO
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -14,36 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse
 from pydantic import BaseModel
 from typing import Optional
-from database import conn
-
-# Thread lock to prevent SQLite cursor conflicts between
-# the Telegram bot daemon thread and FastAPI request threads
-db_lock = threading.Lock()
-
-
-def db_fetch_all(sql: str, params: tuple = ()):
-    """Thread-safe fetchall helper — uses a fresh cursor per call."""
-    with db_lock:
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        return cur.fetchall()
-
-
-def db_fetch_one(sql: str, params: tuple = ()):
-    """Thread-safe fetchone helper — uses a fresh cursor per call."""
-    with db_lock:
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        return cur.fetchone()
-
-
-def db_execute(sql: str, params: tuple = ()):
-    """Thread-safe execute + commit helper — uses a fresh cursor per call."""
-    with db_lock:
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        conn.commit()
-        return cur.lastrowid
+from database import conn, db_lock, db_fetch_all, db_fetch_one, db_execute
+from financials import FeedMRP, MilkMRP, WasteMRP, OperationalMRP, get_aggregate_report
 
 from telegram_bot import (
     start_bot,
@@ -206,7 +178,7 @@ def get_members():
             "alamat": r[4],
             "role": r[5] or "Penitip Ternak",
             "barn": r[6],
-            "iuran_wajib": r[7] or 50000.0,
+            "iuran_wajib": (r[9] or 0) * 200000.0,
             "iuran_pokok": r[8] or 100000.0,
             "cow_count": r[9] or 0,
         })
@@ -254,6 +226,9 @@ def get_member_detail(member_id: int):
             "lactate_status": c[6] or "Kering",
             "litre_milked_today": c[7] or 0.0
         })
+
+    # Hitung iuran wajib: 200.000 per sapi
+    member_data["iuran_wajib"] = len(member_data["cows"]) * 200000.0
 
     return member_data
 
@@ -746,14 +721,39 @@ def download_spk_pdf(cow_code: str):
     )
 
 
+@app.get("/api/financials/feed")
+def get_feed_financials():
+    return FeedMRP.get_feed_report()
 
-# Inject BOT_STATUS reference so telegram_bot.py can update live health status
-set_bot_status_ref(BOT_STATUS)
+@app.get("/api/financials/milk")
+def get_milk_financials():
+    return MilkMRP.get_milk_report()
 
-threading.Thread(
-    target=start_bot,
-    daemon=True
-).start()
+@app.get("/api/financials/waste")
+def get_waste_financials():
+    return WasteMRP.get_waste_report()
+
+@app.get("/api/financials/operational")
+def get_operational_financials():
+    return OperationalMRP.get_operational_report()
+
+@app.get("/api/financials/report")
+def get_financial_report():
+    return get_aggregate_report()
+
+@app.post("/api/financials/waste/collect")
+def collect_waste_daily():
+    WasteMRP.collect_daily_waste()
+    return {"status": "success", "message": "Daily waste collected."}
+
+@app.on_event("startup")
+async def startup_event():
+    # Inject BOT_STATUS reference so telegram_bot.py can update live health status
+    set_bot_status_ref(BOT_STATUS)
+    threading.Thread(
+        target=start_bot,
+        daemon=True
+    ).start()
 
 
 

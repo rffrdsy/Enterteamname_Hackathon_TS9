@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Manajemen Limbah | MooOS - Manajemen Ternak</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+
+<body x-data="{ page: 'limbahMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+  class="bg-gray-50 text-gray-800">
+  <include src="./partials/preloader.html"></include>
+
+  <div class="flex h-screen overflow-hidden">
+    <include src="./partials/sidebar.html"></include>
+
+    <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+      <include src="./partials/overlay.html" />
+      <include src="./partials/header.html" />
+
+      <main>
+        <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-6">
+
+          <div class="flex justify-between items-end">
+            <div class="space-y-1">
+              <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Limbah & Pupuk Organik</h1>
+              <p class="text-sm text-gray-500">Kelola limbah kotoran sapi dan proses fermentasi menjadi pupuk organik bernilai jual</p>
+            </div>
+            <button onclick="collectDailyWaste()"
+              class="inline-flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-semibold transition-colors shadow-sm cursor-pointer">
+              Timbang & Kumpulkan Limbah Hari Ini
+            </button>
+          </div>
+
+          <!-- Metrik Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white border border-gray-200 rounded-md p-6">
+              <span class="block text-sm font-semibold text-gray-500">Estimasi Limbah Harian</span>
+              <div class="flex items-baseline gap-1 mt-2">
+                <span id="daily-waste" class="text-3xl font-bold text-slate-800">0</span>
+                <span class="text-sm text-gray-500">kg/hari</span>
+              </div>
+              <p id="active-cows" class="text-xs text-gray-400 mt-2">0 sapi aktif</p>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-md p-6">
+              <span class="block text-sm font-semibold text-gray-500">Total Pupuk Siap Jual</span>
+              <div class="flex items-baseline gap-1 mt-2">
+                <span id="ready-fertilizer" class="text-3xl font-bold text-green-600">0</span>
+                <span class="text-sm text-gray-500">kg</span>
+              </div>
+              <p class="text-xs text-gray-400 mt-2">Telah melewati masa fermentasi 14 hari</p>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-md p-6">
+              <span class="block text-sm font-semibold text-gray-500">Harga Pasaran Pupuk</span>
+              <div class="flex items-baseline gap-1 mt-2">
+                <span id="current-price" class="text-3xl font-bold text-slate-800">Rp 0</span>
+                <span class="text-sm text-gray-500">/kg</span>
+              </div>
+            </div>
+            
+            <div class="bg-white border border-gray-200 rounded-md p-6">
+              <span class="block text-sm font-semibold text-gray-500">Estimasi Nilai Total</span>
+              <div class="flex items-baseline gap-1 mt-2">
+                <span id="total-value" class="text-3xl font-bold text-slate-800">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart Harga -->
+            <div class="lg:col-span-2 bg-white border border-gray-200 rounded-lg shadow-sm p-6 text-left">
+              <div class="space-y-1 mb-4">
+                <h2 class="text-lg font-bold text-slate-800 tracking-tight">Tren Harga Pupuk Organik</h2>
+              </div>
+              <div class="relative h-[300px]">
+                <canvas id="priceChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Daftar Batch -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col">
+              <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-slate-800 tracking-tight">Status Proses Fermentasi</h3>
+              </div>
+              <div class="flex-1 overflow-y-auto max-h-[300px] p-0">
+                <ul id="batch-list" class="divide-y divide-gray-100">
+                  <li class="p-6 text-center text-gray-500 text-sm">Memuat data...</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:8000';
+
+    async function loadLimbahData() {
+      try {
+        const res = await fetch(`${API}/api/financials/waste`);
+        const data = await res.json();
+        
+        document.getElementById('daily-waste').textContent = data.daily_waste_kg;
+        document.getElementById('active-cows').textContent = `${data.active_cows} sapi aktif (@ 5kg/hari)`;
+        document.getElementById('ready-fertilizer').textContent = data.total_ready_kg;
+        document.getElementById('current-price').textContent = `Rp ${data.current_price_per_kg.toLocaleString('id-ID')}`;
+        document.getElementById('total-value').textContent = `Rp ${(data.total_ready_kg * data.current_price_per_kg).toLocaleString('id-ID')}`;
+
+        renderBatches(data.batches);
+        renderChart(data.history);
+
+      } catch (err) {
+        console.error("Gagal load limbah data:", err);
+      }
+    }
+
+    function renderBatches(batches) {
+      const list = document.getElementById('batch-list');
+      list.innerHTML = '';
+      if(batches.length === 0) {
+        list.innerHTML = '<li class="p-6 text-center text-gray-500 text-sm">Belum ada data proses fermentasi</li>';
+        return;
+      }
+
+      batches.forEach(b => {
+        const isReady = b.status === 'READY';
+        const color = isReady ? 'green' : 'orange';
+        const label = isReady ? 'Siap Jual' : 'Fermentasi';
+        const dateObj = new Date(b.date_collected);
+        const dateStr = `${dateObj.getDate()} ${dateObj.toLocaleString('id-ID', {month: 'short'})}`;
+        
+        list.innerHTML += `
+          <li class="px-6 py-4 hover:bg-gray-50 flex items-center justify-between">
+            <div>
+              <p class="text-sm font-semibold text-slate-800">Batch ${dateStr}</p>
+              <p class="text-xs text-gray-500">${b.kg_amount} kg • Siap: ${b.ready_date}</p>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-${color}-50 border border-${color}-200 text-${color}-700">
+              ${label}
+            </span>
+          </li>
+        `;
+      });
+    }
+
+    let priceChartInstance = null;
+    function renderChart(history) {
+      const ctx = document.getElementById('priceChart').getContext('2d');
+      const labels = history.map(h => {
+        const d = new Date(h.date);
+        return `${d.getDate()} ${d.toLocaleString('id-ID', {month: 'short'})}`;
+      });
+      const data = history.map(h => h.price);
+
+      if (priceChartInstance) {
+        priceChartInstance.data.labels = labels;
+        priceChartInstance.data.datasets[0].data = data;
+        priceChartInstance.update();
+      } else {
+        priceChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Harga Pupuk (Rp/kg)',
+              data,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16,185,129,0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    async function collectDailyWaste() {
+      try {
+        const res = await fetch(`${API}/api/financials/waste/collect`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message);
+        loadLimbahData();
+      } catch (err) {
+        console.error("Gagal collect waste:", err);
+        alert("Gagal mencatat limbah harian.");
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadLimbahData);
+  </script>
+</body>
+</html>

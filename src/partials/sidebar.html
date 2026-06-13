@@ -16,7 +16,7 @@
   </div>
   <div class="flex flex-col justify-between h-full overflow-y-auto duration-300 ease-linear no-scrollbar pb-6">
     <nav
-      x-data="{ selected: window.location.pathname.includes('anggota') ? 'Anggota' : (window.location.pathname.includes('ternak') || window.location.pathname.includes('detail_sapi')) ? 'Ternak' : window.location.pathname.includes('hasil') ? 'Hasil' : window.location.pathname.includes('pakan') ? 'Pakan' : window.location.pathname.includes('transaksi') ? 'Transaksi' : window.location.pathname.includes('laporan') ? 'Laporan' : window.location.pathname.includes('pengaturan') ? 'Pengaturan' : window.location.pathname.includes('bantuan') ? 'Bantuan' : 'Dashboard' }"
+      x-data="{ selected: window.location.pathname.includes('anggota') ? 'Anggota' : (window.location.pathname.includes('ternak') || window.location.pathname.includes('detail_sapi')) ? 'Ternak' : window.location.pathname.includes('hasil') ? 'Hasil' : window.location.pathname.includes('limbah') ? 'Limbah' : window.location.pathname.includes('pakan') ? 'Pakan' : window.location.pathname.includes('transaksi') ? 'Transaksi' : window.location.pathname.includes('laporan') ? 'Laporan' : window.location.pathname.includes('pengaturan') ? 'Pengaturan' : window.location.pathname.includes('bantuan') ? 'Bantuan' : 'Dashboard' }"
       class="flex flex-col justify-between flex-1">
 
       <div>
@@ -86,6 +86,17 @@
                 <line x1="6" y1="20" x2="6" y2="14" />
               </svg>
               <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Hasil</span>
+            </a>
+          </li>
+          <li>
+            <a href="limbah_MooOS.html"
+              class="menu-item group relative flex items-center gap-3 rounded-md px-4 py-2 font-medium duration-300 ease-in-out"
+              :class="selected === 'Limbah' ? 'bg-[#43A55A]/10 border-l-4 border-[#43A55A] text-[#43A55A] dark:bg-[#43A55A]/20 dark:border-[#43A55A] dark:text-white' : 'text-gray-500 hover:bg-gray-100 border-l-4 border-transparent dark:text-gray-400 dark:hover:bg-white/5'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+              </svg>
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Limbah</span>
             </a>
           </li>
 

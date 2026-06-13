@@ -1,9 +1,42 @@
 import sqlite3
+import threading
+import os
+
+_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mooos.db")
 
 conn = sqlite3.connect(
-    "mooos.db",
+    _DB_PATH,
     check_same_thread=False
 )
+
+# Thread lock to prevent SQLite cursor conflicts between
+# the Telegram bot daemon thread and FastAPI request threads
+db_lock = threading.Lock()
+
+
+def db_fetch_all(sql: str, params: tuple = ()):
+    """Thread-safe fetchall helper — uses a fresh cursor per call."""
+    with db_lock:
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        return cur.fetchall()
+
+
+def db_fetch_one(sql: str, params: tuple = ()):
+    """Thread-safe fetchone helper — uses a fresh cursor per call."""
+    with db_lock:
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        return cur.fetchone()
+
+
+def db_execute(sql: str, params: tuple = ()):
+    """Thread-safe execute + commit helper — uses a fresh cursor per call."""
+    with db_lock:
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        conn.commit()
+        return cur.lastrowid
 
 cursor = conn.cursor()
 
@@ -185,5 +218,96 @@ if count == 0:
             "INSERT INTO milk_financials (date, total_liters, price_per_liter, estimated_revenue) VALUES (?, ?, ?, ?)",
             (d.strftime("%Y-%m-%d"), liters, 6500.0, revenue)
         )
+# ==========================================
+# NEW TABLES FOR FINANCIAL RESTRUCTURING
+# ==========================================
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS waste_financials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT UNIQUE,
+    total_kg_fertilizer REAL,
+    price_per_kg REAL,
+    estimated_revenue REAL
+)
+""")
+
+# Inject dummy historical data for waste_financials if empty
+cursor.execute("SELECT COUNT(*) FROM waste_financials")
+if cursor.fetchone()[0] == 0:
+    import datetime
+    import random
+    today = datetime.date.today()
+    for i in range(30, 0, -1):
+        d = today - datetime.timedelta(days=i)
+        # Random fertilizer produced
+        fertilizer = round(random.uniform(50, 70), 1)
+        # Random price around 1500 - 2000 per kg
+        price = round(random.uniform(1500, 2000), 0)
+        revenue = fertilizer * price
+        cursor.execute(
+            "INSERT INTO waste_financials (date, total_kg_fertilizer, price_per_kg, estimated_revenue) VALUES (?, ?, ?, ?)",
+            (d.strftime("%Y-%m-%d"), fertilizer, price, revenue)
+        )
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS waste_processing (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date_collected TEXT,
+    kg_amount REAL,
+    status TEXT,
+    ready_date TEXT
+)
+""")
+
+# Inject dummy active batches for waste_processing if empty
+cursor.execute("SELECT COUNT(*) FROM waste_processing")
+if cursor.fetchone()[0] == 0:
+    import datetime
+    today = datetime.date.today()
+    # Create some active batches
+    for i in range(1, 15, 3):
+        d_collected = today - datetime.timedelta(days=i)
+        d_ready = d_collected + datetime.timedelta(days=14)
+        status = "FERMENTING" if d_ready > today else "READY"
+        cursor.execute(
+            "INSERT INTO waste_processing (date_collected, kg_amount, status, ready_date) VALUES (?, ?, ?, ?)",
+            (d_collected.strftime("%Y-%m-%d"), 100.0, status, d_ready.strftime("%Y-%m-%d"))
+        )
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS operational_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT,
+    category TEXT,
+    description TEXT,
+    amount REAL,
+    type TEXT
+)
+""")
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS feed_price_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT UNIQUE,
+    price_per_kg REAL
+)
+""")
+
+# Inject dummy historical data for feed_price_history if empty
+cursor.execute("SELECT COUNT(*) FROM feed_price_history")
+if cursor.fetchone()[0] == 0:
+    import datetime
+    import random
+    today = datetime.date.today()
+    for i in range(30, 0, -1):
+        d = today - datetime.timedelta(days=i)
+        price = round(random.uniform(4800, 5500), 0)
+        cursor.execute(
+            "INSERT INTO feed_price_history (date, price_per_kg) VALUES (?, ?)",
+            (d.strftime("%Y-%m-%d"), price)
+        )
+
+# Auto-update all cows to Laktasi for testing purposes
+cursor.execute("UPDATE cows SET lactate_status = 'Laktasi' WHERE lactate_status = 'Kering' OR lactate_status IS NULL")
 
 conn.commit()

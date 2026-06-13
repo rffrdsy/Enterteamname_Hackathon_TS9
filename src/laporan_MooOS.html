@@ -787,51 +787,53 @@
     // ── Load dari backend ─────────────────────────────────────────
     async function loadData() {
       try {
-        const [cowsRes, feedRes] = await Promise.all([
+        const [cowsRes, reportRes] = await Promise.all([
           fetch(`${API}/cows`),
-          fetch(`${API}/feed-orders`)
+          fetch(`${API}/api/financials/report`)
         ]);
-        const cows  = cowsRes.ok  ? await cowsRes.json()  : [];
-        const feeds = feedRes.ok  ? await feedRes.json()  : [];
-        populateDynamic(cows, feeds);
+        const cows   = cowsRes.ok   ? await cowsRes.json()   : [];
+        const report = reportRes.ok ? await reportRes.json() : null;
+        populateDynamic(cows, report);
       } catch (e) {
         console.warn('Backend tidak tersedia — menampilkan data demo.', e);
       }
     }
 
-    function populateDynamic(cows, feeds) {
+    function populateDynamic(cows, report) {
       // Ternak aktif (not SOLD)
       const aktif = cows.filter(c => c.status !== 'SOLD');
       const sold  = cows.filter(c => c.status === 'SOLD');
-      document.getElementById('ops-ternak').textContent = aktif.length || 17;
-      document.getElementById('ops-ternak-sold').textContent =
-        `${sold.length} terjual bulan ini`;
+      
+      document.getElementById('ops-ternak').textContent = report ? report.feed.active_cows : (aktif.length || 17);
+      document.getElementById('ops-ternak-sold').textContent = `${sold.length} terjual bulan ini`;
 
-      // Konsumsi pakan total dari feed orders
-      const totalPakan = feeds.reduce((s, f) => s + ((f.qty || 0) * (f.price_per_kg || 5000)), 0);
-      const totalPakanKg = feeds.reduce((s, f) => s + (f.qty || 0), 0);
-      document.getElementById('ops-pakan').textContent =
-        totalPakanKg > 0 ? totalPakanKg.toLocaleString('id-ID') : '2.550';
+      // Konsumsi pakan
+      const dailyPakanKg = report ? report.feed.daily_feed_needed_kg : 85;
+      const totalPakanBulanan = dailyPakanKg * 30; // Estimasi bulanan
+      document.getElementById('ops-pakan').textContent = totalPakanBulanan.toLocaleString('id-ID');
 
-      // Revenue dari sapi terjual
-      const revenueJualTernak = sold.reduce((s, c) => s + (c.weight ? c.weight * HARGA_PER_KG_SAPI : 0), 0);
-      const revenueSusu   = 14100000;
-      const revenuePupuk  = 2500000;
-      const totalRevenue  = (revenueJualTernak || 46500000) + revenueSusu + revenuePupuk;
+      // Revenue & Expenses dari laporan MRP
+      const revenueJualTernak = sold.reduce((s, c) => s + (c.weight ? c.weight * HARGA_PER_KG_SAPI : 0), 0) || 46500000;
+      const revenueSusu   = report ? (report.milk.estimated_revenue_today * 30) : 14100000;
+      const revenuePupuk  = report ? (report.waste.total_ready_kg * report.waste.current_price_per_kg) : 2500000;
+      const totalRevenue  = revenueJualTernak + revenueSusu + revenuePupuk;
+      
+      const expensePakan  = report ? (report.feed.daily_feed_cost * 30) : 2375000;
+      const expenseOps    = report ? report.operational.barn_cleaning_cost_per_month : 500000;
 
       document.getElementById('ops-revenue').textContent = fmt(totalRevenue);
-      document.getElementById('fin-jual-ternak').textContent = fmt(revenueJualTernak || 46500000);
-      document.getElementById('fin-biaya-pakan').textContent = fmt(totalPakan || 2375000);
+      document.getElementById('fin-jual-ternak').textContent = fmt(revenueJualTernak);
+      document.getElementById('fin-biaya-pakan').textContent = fmt(expensePakan);
 
       // Net profit
-      const netProfit = totalRevenue - (totalPakan || 2375000) - 3200000;
-      document.getElementById('fin-net-profit').textContent = fmt(netProfit > 0 ? netProfit : 57025000);
+      const netProfit = totalRevenue - expensePakan - expenseOps;
+      document.getElementById('fin-net-profit').textContent = fmt(netProfit);
 
       // Donut pct
-      const pctTernak = Math.round(((revenueJualTernak || 46500000) / totalRevenue) * 100);
+      const pctTernak = Math.round((revenueJualTernak / totalRevenue) * 100);
       document.getElementById('donut-ternak-pct').textContent = `~${pctTernak}%`;
 
-      // Kandang breakdown
+      // Kandang breakdown (Demo fallback logic)
       const kandangA = cows.filter(c => c.barn === 'A').length;
       const kandangB = cows.filter(c => c.barn === 'B').length;
       document.getElementById('feed-kandang-a').textContent =
@@ -842,7 +844,7 @@
       // Update donut with real pct
       if (window._revenueDonut) {
         window._revenueDonut.data.datasets[0].data = [
-          revenueJualTernak || 46500000,
+          revenueJualTernak,
           revenueSusu,
           revenuePupuk
         ];

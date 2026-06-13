@@ -89,13 +89,15 @@
                     <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Pemilik</th>
                     <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Berat</th>
                     <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Laktasi</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Jual</th>
                     <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Susu Hari Ini (L)</th>
+                    <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="ternak-tbody" class="divide-y divide-gray-100">
                   <!-- Loading state -->
                   <tr id="ternak-loading">
-                    <td colspan="6" class="p-8 text-center text-sm text-gray-400">
+                    <td colspan="8" class="p-8 text-center text-sm text-gray-400">
                       <div class="flex items-center justify-center gap-2">
                         <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
                           viewBox="0 0 24 24">
@@ -242,16 +244,26 @@
     const API = 'http://localhost:8000';
     let activeCowCode = null;
 
-    // ── Status badge helper ────────────────────────────────────────────────
-    function statusBadge(status) {
+    // ── Status badge helpers ────────────────────────────────────────────────
+    function statusJualBadge(status) {
       const map = {
-        'AVAILABLE': { label: 'Tersedia', cls: 'bg-green-50 text-green-700 border-green-200' },
-        'LOOKING_FOR_CARETAKER': { label: 'Mencari Perawat', cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-        'WAITING_CONFIRMATION': { label: 'Menunggu Konfirmasi', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
-        'SOLD': { label: 'Terjual', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-        'REJECTED': { label: 'Ditolak', cls: 'bg-red-50 text-red-700 border-red-200' },
+        'AVAILABLE':             { label: 'Tersedia',             cls: 'bg-green-50 text-green-700 border-green-200' },
+        'LOOKING_FOR_CARETAKER': { label: 'Mencari Perawat',      cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+        'WAITING_CONFIRMATION':  { label: 'Menunggu Konfirmasi',  cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+        'SOLD':                  { label: 'Terjual',              cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+        'REJECTED':              { label: 'Ditolak',              cls: 'bg-red-50 text-red-700 border-red-200' },
+        'DEAD':                  { label: 'Mati',                 cls: 'bg-gray-200 text-gray-600 border-gray-300' },
       };
-      const s = map[status] || { label: status, cls: 'bg-gray-100 text-gray-600 border-gray-200' };
+      const s = map[status] || { label: status || '—', cls: 'bg-gray-100 text-gray-500 border-gray-200' };
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${s.cls}">${s.label}</span>`;
+    }
+
+    function statusLaktasiBadge(status) {
+      const map = {
+        'Laktasi': { label: 'Laktasi', cls: 'bg-sky-50 text-sky-700 border-sky-200' },
+        'Kering':  { label: 'Kering',  cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+      };
+      const s = map[status] || { label: status || 'Kering', cls: 'bg-gray-100 text-gray-500 border-gray-200' };
       return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${s.cls}">${s.label}</span>`;
     }
 
@@ -262,7 +274,7 @@
 
       tbody.innerHTML = `
           <tr id="ternak-loading">
-            <td colspan="6" class="p-8 text-center text-sm text-gray-400">
+            <td colspan="8" class="p-8 text-center text-sm text-gray-400">
               <div class="flex items-center justify-center gap-2">
                 <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -279,7 +291,7 @@
         const cows = await res.json();
 
         if (cows.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-sm text-gray-400">Belum ada data ternak.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-sm text-gray-400">Belum ada data ternak.</td></tr>`;
           countEl.textContent = 'Tidak ada data';
           return;
         }
@@ -290,6 +302,7 @@
           const avatarColors = ['bg-emerald-50 text-emerald-700', 'bg-blue-50 text-blue-700', 'bg-amber-50 text-amber-700', 'bg-purple-50 text-purple-700', 'bg-teal-50 text-teal-700'];
           const avatarCls = avatarColors[cow.id % avatarColors.length];
           const ownerDisplay = cow.owner_name || cow.caretaker;
+          const canSell = !['SOLD', 'WAITING_CONFIRMATION', 'DEAD'].includes(cow.status);
 
           return `
               <tr onclick="window.location.href='detail_sapi_MooOS.html?code=${cow.cow_code}'" class="hover:bg-gray-50/50 transition-colors cursor-pointer">
@@ -305,17 +318,22 @@
                   </div>` : `<span class="text-sm text-gray-400">—</span>`}
                 </td>
                 <td class="p-4 text-sm text-gray-600">${cow.weight ? cow.weight + ' kg' : '—'}</td>
-                <td class="p-4">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${cow.lactate_status === 'Laktasi' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200'}">${cow.lactate_status || 'Kering'}</span>
-                </td>
+                <td class="p-4">${statusLaktasiBadge(cow.lactate_status)}</td>
+                <td class="p-4">${statusJualBadge(cow.status)}</td>
                 <td class="p-4 text-right">
                   <span class="text-sm font-bold text-slate-800">${(cow.litre_milked_today || 0).toFixed(1)} L</span>
+                </td>
+                <td class="p-4 text-center" onclick="event.stopPropagation()">
+                  ${canSell
+                    ? `<button onclick="openJualModal('${cow.cow_code}')" class="inline-flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 text-xs font-semibold transition-colors">Jual</button>`
+                    : `<span class="text-xs text-gray-400">—</span>`
+                  }
                 </td>
               </tr>`;
         }).join('');
 
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-sm text-red-500">⚠️ Gagal memuat data: ${err.message}. Pastikan backend berjalan di port 8000.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-sm text-red-500">⚠️ Gagal memuat data: ${err.message}. Pastikan backend berjalan di port 8000.</td></tr>`;
         countEl.textContent = 'Error';
       }
     }

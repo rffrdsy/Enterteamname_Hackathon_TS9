@@ -442,20 +442,10 @@
   </div>
   <!-- ===== Page Wrapper End ===== -->
   <script>
-    // ── Dummy Data: Harga Konsentrat 90 Hari Terakhir ──────────────────────
-    const chartData = {
-      categories: [
-        '12 Mar', '17 Mar', '22 Mar', '27 Mar',
-        '01 Apr', '06 Apr', '11 Apr', '16 Apr', '21 Apr', '26 Apr',
-        '01 Mei', '06 Mei', '11 Mei', '16 Mei', '21 Mei', '26 Mei', '31 Mei',
-        '05 Jun', '10 Jun', '13 Jun'
-      ],
-      prices: [
-        4120, 4085, 4150, 4200,
-        4175, 4230, 4310, 4280, 4350, 4300,
-        4260, 4190, 4220, 4290, 4370, 4410, 4380,
-        4430, 4460, 4445
-      ]
+    // ── Data: Akan di-fetch dari API ──────────────────────
+    let chartData = {
+      categories: [],
+      prices: []
     };
 
     // ── ApexCharts Config ──────────────────────────────────────────────────
@@ -571,7 +561,37 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Fetch data dari API
+      try {
+        const response = await fetch('/api/financials/feed');
+        const data = await response.json();
+        
+        // Format history for chart
+        if (data.history && data.history.length > 0) {
+          chartData.categories = data.history.map(item => {
+             const d = new Date(item.date);
+             return `${d.getDate()} ${d.toLocaleString('id-ID', {month: 'short'})}`;
+          });
+          chartData.prices = data.history.map(item => item.price);
+          
+          // Update Harga Saat Ini di DOM
+          const currentPriceEl = document.querySelector('.text-3xl.md\\:text-4xl.font-bold.text-red-600');
+          if (currentPriceEl) currentPriceEl.textContent = `Rp ${data.current_price_per_kg.toLocaleString('id-ID')}`;
+          
+          // Update Total Pakan - Kebutuhan Harian di DOM
+          const kebutuhanHarianEl = document.querySelector('#konten-total-pakan .text-4xl.font-bold.text-slate-800:nth-of-type(1)');
+          if (kebutuhanHarianEl) kebutuhanHarianEl.textContent = Math.round(data.daily_feed_needed_kg);
+          
+          const kebutuhanHarianSub = document.querySelector('#konten-total-pakan .text-xs.font-semibold.text-gray-400');
+          if (kebutuhanHarianSub) kebutuhanHarianSub.textContent = `${data.active_cows} sapi aktif`;
+        }
+      } catch (err) {
+        console.error("Gagal fetch data pakan:", err);
+      }
+
+      chartOptions.series[0].data = chartData.prices;
+      chartOptions.xaxis.categories = chartData.categories;
       const chart = new ApexCharts(document.getElementById('chart-harga-pakan'), chartOptions);
       chart.render();
 

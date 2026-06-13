@@ -40,6 +40,35 @@ def _mark_bot_activity():
 
 
 # =========================
+# STATE DICTIONARY
+# =========================
+milk_reporting_state = {}
+
+def render_main_milk_board(chat_id):
+    state = milk_reporting_state.get(chat_id)
+    if not state:
+        return InlineKeyboardMarkup()
+    markup = InlineKeyboardMarkup(row_width=1)
+    for cow in state['cows']:
+        liters = state['liters'][cow]
+        markup.add(InlineKeyboardButton(f"🐄 {cow} : {liters} L", callback_data=f"selectmilk|{cow}"))
+    markup.add(InlineKeyboardButton("✅ Selesai & Simpan", callback_data="save_milk_report"))
+    return markup
+
+def render_edit_milk_board(cow):
+    markup = InlineKeyboardMarkup(row_width=3)
+    markup.add(
+        InlineKeyboardButton("-5", callback_data=f"adjmilk|{cow}|-5"),
+        InlineKeyboardButton("-1", callback_data=f"adjmilk|{cow}|-1"),
+        InlineKeyboardButton("-0.5", callback_data=f"adjmilk|{cow}|-0.5"),
+        InlineKeyboardButton("+0.5", callback_data=f"adjmilk|{cow}|0.5"),
+        InlineKeyboardButton("+1", callback_data=f"adjmilk|{cow}|1"),
+        InlineKeyboardButton("+5", callback_data=f"adjmilk|{cow}|5")
+    )
+    markup.add(InlineKeyboardButton("🔙 Kembali", callback_data="back_milk_main"))
+    return markup
+
+# =========================
 # COMMANDS
 # =========================
 
@@ -224,13 +253,32 @@ def resend_waiting_confirmations():
 def start_bot():
     print("Bot Running...")
     if _bot_status_ref is not None:
-        _bot_status_ref["connected"] = True
         _bot_status_ref["start_ts"] = time.time()
     resend_waiting_confirmations()
-    bot.infinity_polling()
-    # If polling exits (e.g. network error), mark as disconnected
-    if _bot_status_ref is not None:
-        _bot_status_ref["connected"] = False
+
+    retry_delay = 5  # seconds, will double on each 409 conflict up to 60s
+    while True:
+        try:
+            if _bot_status_ref is not None:
+                _bot_status_ref["connected"] = True
+            bot.infinity_polling(timeout=30, long_polling_timeout=20)
+        except Exception as e:
+            err_str = str(e)
+            if _bot_status_ref is not None:
+                _bot_status_ref["connected"] = False
+            if "409" in err_str or "Conflict" in err_str:
+                print(f"[BOT] 409 Conflict — another instance may still be shutting down. Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+                retry_delay = min(retry_delay * 2, 60)  # exponential backoff, max 60s
+            else:
+                print(f"[BOT] Polling error: {e}. Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+        else:
+            # polling ended cleanly (no exception)
+            if _bot_status_ref is not None:
+                _bot_status_ref["connected"] = False
+            print("[BOT] Polling stopped cleanly.")
+            break
 
 
 # =========================
@@ -689,27 +737,145 @@ Sapi telah resmi terjual.
     # ===============================
     # LAPOR HARIAN KANDANG
     # ===============================
-    elif call.data.startswith("lapor_pakan_") or call.data.startswith("lapor_susu_"):
-        parts = call.data.split("_")
-        lapor_type = parts[1] # pakan / susu
-        barn = parts[2]
+    elif call.data.startswith("lapor_pakan_"):
+        barn = call.data.replace("lapor_pakan_", "")
         telegram_id = call.from_user.id
         today = datetime.now().strftime("%Y-%m-%d")
         
         cursor.execute(
             "INSERT INTO daily_kandang_logs (date, barn, type, telegram_id) VALUES (?, ?, ?, ?)",
-            (today, barn, lapor_type.upper(), telegram_id)
+            (today, barn, 'PAKAN', telegram_id)
         )
         conn.commit()
         
-        bot.answer_callback_query(call.id, f"Laporan {lapor_type} disimpan!")
+        bot.answer_callback_query(call.id, "Laporan Pakan disimpan!")
         bot.edit_message_text(
-            f"✅ *{lapor_type.capitalize()}* Selesai dicatat.\n\n_Ketik /lapor lagi untuk melihat menu lainnya atau membatalkan._",
+            "✅ *Pakan* Selesai dicatat.\n\n_Ketik /lapor lagi untuk melihat menu lainnya atau membatalkan._",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup()
         )
+
+    elif call.data.startswith("lapor_susu_"):
+        barn = call.data.replace("lapor_susu_", "")
+        
+        cursor.execute("SELECT cow_code FROM cows WHERE barn = ? AND status NOT IN ('SOLD', 'DEAD', 'REJECTED') AND jenis = 'Perah'", (barn,))
+        rows = cursor.fetchall()
+        
+        if not rows:
+            bot.answer_callback_query(call.id, "Tidak ada Sapi Perah aktif.")
+            bot.send_message(call.message.chat.id, f"Tidak ada Sapi Perah aktif di Kandang {barn}.")
+            return
+            
+        cows_list = [r[0] for r in rows]
+        milk_reporting_state[call.message.chat.id] = {
+            "cows": cows_list,
+            "liters": {c: 0.0 for c in cows_list},
+            "barn": barn
+        }
+        
+        bot.answer_callback_query(call.id)
+        bot.edit_message_text(
+            f"📝 *Pencatatan Susu (Kandang {barn})*\nSilakan klik nama sapi untuk mengatur hasil susu (Liter):",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown",
+            reply_markup=render_main_milk_board(call.message.chat.id)
+        )
+
+    elif call.data.startswith("selectmilk|"):
+        cow = call.data.split("|", 1)[1]
+        chat_id = call.message.chat.id
+        state = milk_reporting_state.get(chat_id)
+        if not state:
+            bot.answer_callback_query(call.id, "Sesi habis, silakan mulai ulang /lapor.")
+            return
+        
+        liters = state['liters'].get(cow, 0.0)
+        bot.answer_callback_query(call.id)
+        bot.edit_message_text(
+            f"🐄 *Sapi {cow}*\nHasil Susu: *{liters} Liter*\n\nGunakan tombol di bawah untuk menyesuaikan:",
+            chat_id=chat_id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown",
+            reply_markup=render_edit_milk_board(cow)
+        )
+
+    elif call.data.startswith("adjmilk|"):
+        _, cow, amt_str = call.data.split("|")
+        amount = float(amt_str)
+        
+        chat_id = call.message.chat.id
+        state = milk_reporting_state.get(chat_id)
+        if not state:
+            bot.answer_callback_query(call.id, "Sesi habis.")
+            return
+        
+        current = state['liters'].get(cow, 0.0)
+        new_amount = max(0.0, round(current + amount, 1))
+        state['liters'][cow] = new_amount
+        
+        bot.answer_callback_query(call.id)
+        bot.edit_message_text(
+            f"🐄 *Sapi {cow}*\nHasil Susu: *{new_amount} Liter*\n\nGunakan tombol di bawah untuk menyesuaikan:",
+            chat_id=chat_id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown",
+            reply_markup=render_edit_milk_board(cow)
+        )
+
+    elif call.data == "back_milk_main":
+        chat_id = call.message.chat.id
+        state = milk_reporting_state.get(chat_id)
+        if not state:
+            bot.answer_callback_query(call.id, "Sesi habis.")
+            return
+            
+        bot.answer_callback_query(call.id)
+        bot.edit_message_text(
+            f"📝 *Pencatatan Susu (Kandang {state['barn']})*\nSilakan klik nama sapi untuk mengatur hasil susu (Liter):",
+            chat_id=chat_id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown",
+            reply_markup=render_main_milk_board(chat_id)
+        )
+
+    elif call.data == "save_milk_report":
+        chat_id = call.message.chat.id
+        state = milk_reporting_state.get(chat_id)
+        if not state:
+            bot.answer_callback_query(call.id, "Sesi habis.")
+            return
+            
+        bot.answer_callback_query(call.id, "Menyimpan data susu...")
+        
+        for cow, liters in state['liters'].items():
+            cursor.execute("UPDATE cows SET litre_milked_today = ? WHERE cow_code = ?", (liters, cow))
+        
+        from datetime import datetime
+        today = datetime.now().strftime("%Y-%m-%d")
+        telegram_id = call.from_user.id
+        cursor.execute(
+            "INSERT INTO daily_kandang_logs (date, barn, type, telegram_id) VALUES (?, ?, ?, ?)",
+            (today, state['barn'], 'SUSU', telegram_id)
+        )
+        conn.commit()
+        
+        bot.edit_message_text(
+            "✅ *Laporan Susu Selesai!*\nSemua data telah disimpan.\nData MRP Susu sedang disinkronisasi...",
+            chat_id=chat_id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup()
+        )
+        del milk_reporting_state[chat_id]
+        
+        try:
+            import financials
+            financials.MilkMRP.recalculate()
+        except Exception as e:
+            print("Gagal hitung ulang MRP Susu:", e)
         
     elif call.data.startswith("lapor_sakit_"):
         barn = call.data.replace("lapor_sakit_", "")
