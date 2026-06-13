@@ -738,8 +738,36 @@ def get_operational_financials():
     return OperationalMRP.get_operational_report()
 
 @app.get("/api/financials/report")
-def get_financial_report():
-    return get_aggregate_report()
+def get_financial_report(period: str = "all"):
+    return get_aggregate_report(period)
+
+@app.get("/reports/{report_type}/pdf")
+def download_report_pdf(report_type: str, period: str = "all"):
+    from report_generator import generate_report_pdf
+    
+    if report_type not in ["pakan", "susu", "keuangan", "ternak"]:
+        raise HTTPException(status_code=400, detail="Tipe laporan tidak valid")
+        
+    if report_type == "ternak":
+        from database import db_fetch_all
+        cows_db = db_fetch_all("SELECT cow_code, weight, status, barn, jenis, umur, tgl_masuk FROM cows")
+        report_data = {
+            "cows": [{"code": c[0], "weight": c[1], "status": c[2], "barn": c[3], "jenis": c[4], "umur": c[5], "tgl_masuk": c[6]} for c in cows_db]
+        }
+    else:
+        report_data = get_aggregate_report(period)
+        
+    pdf_bytes = generate_report_pdf(report_type, period, report_data)
+    filename = f"Laporan_{report_type.capitalize()}_{period}.pdf"
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(pdf_bytes)),
+        }
+    )
 
 @app.post("/api/financials/waste/collect")
 def collect_waste_daily():

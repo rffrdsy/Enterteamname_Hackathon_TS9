@@ -18,16 +18,20 @@ class FeedMRP:
 
         daily_feed_cost = daily_feed_needed_kg * current_price_per_kg
 
+        # Mock current stock since there is no inventory table yet
+        current_stock_kg = 2300.0
+
         # Fetch history for chart
-        history = db_fetch_all("SELECT date, price_per_kg FROM feed_price_history ORDER BY date ASC")
+        history = db_fetch_all("SELECT date, price_per_kg, total_kg FROM feed_financials ORDER BY date ASC")
         
         return {
             "active_cows": active_cows_count,
             "total_weight_kg": total_weight,
             "daily_feed_needed_kg": daily_feed_needed_kg,
+            "current_stock_kg": current_stock_kg,
             "current_price_per_kg": current_price_per_kg,
             "daily_feed_cost": daily_feed_cost,
-            "history": [{"date": r[0], "price": r[1]} for r in history]
+            "history": [{"date": r[0], "price": r[1], "total_kg": r[2]} for r in history]
         }
 
 class MilkMRP:
@@ -132,34 +136,84 @@ class WasteMRP:
 
 class OperationalMRP:
     @staticmethod
-    def get_operational_report():
+    def get_operational_report(months_multiplier=1):
         cows = db_fetch_all("SELECT id FROM cows WHERE status = 'ACTIVE'")
         active_cows_count = len(cows)
         
-        # Total iuran wajib: 200,000 per cow
-        iuran_wajib_total = active_cows_count * 200000.0
+        # Keanggotaan
+        members_data = db_fetch_all('''
+            SELECT m.role, m.iuran_pokok, 
+                   (SELECT COUNT(*) FROM cows c WHERE c.owner_id = m.id) as cow_count 
+            FROM members m
+        ''')
+        simpanan_pokok_total = len(members_data) * 100000.0
+        simpanan_wajib_total = len(members_data) * 200000.0 * months_multiplier
 
-        # Total iuran pokok (assuming members table has 'iuran_pokok' column, wait, let's check members table schema)
-        members = db_fetch_all("SELECT role FROM members") # Just counting for now
-        # Actually in main.py, iuran pokok is not dynamically calc, we just know members pay it.
-        # Let's say we have a fixed barn cleaning cost
-        barn_cleaning_cost_per_month = 500000.0
+        # Gaji Penanggung Jawab
+        pj_count = sum(1 for m in members_data if m[0] == 'Penanggungjawab Ternak')
+        gaji_pj_kandang = pj_count * 2000000.0 * months_multiplier
+        
+        # Jaminan Kesehatan
+        jaminan_kesehatan = active_cows_count * 50000.0 * months_multiplier
+        
+        # Operasional Lainnya
+        operasional_lain = 500000.0 * months_multiplier
 
         return {
             "active_cows": active_cows_count,
-            "iuran_wajib_total_estimasi": iuran_wajib_total,
-            "barn_cleaning_cost_per_month": barn_cleaning_cost_per_month
+            "simpanan_pokok_total": simpanan_pokok_total,
+            "simpanan_wajib_total": simpanan_wajib_total,
+            "gaji_pj_kandang": gaji_pj_kandang,
+            "jaminan_kesehatan": jaminan_kesehatan,
+            "operasional_lain": operasional_lain
         }
 
-def get_aggregate_report():
+def get_aggregate_report(period="all"):
+    import datetime
+    today = datetime.date.today()
+    
+    end_date = today.strftime("%Y-%m-%d")
+    
+    if period == "30":
+        start_date = (today - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+        months_multiplier = 1
+    elif period == "90":
+        start_date = (today - datetime.timedelta(days=90)).strftime("%Y-%m-%d")
+        months_multiplier = 3
+    elif period == "365":
+        start_date = (today - datetime.timedelta(days=365)).strftime("%Y-%m-%d")
+        months_multiplier = 12
+    else: # all
+        start_date = "2000-01-01"
+        end_date = "9999-12-31"
+        months_multiplier = 12
+
     feed_report = FeedMRP.get_feed_report()
     milk_report = MilkMRP.get_milk_report()
     waste_report = WasteMRP.get_waste_report()
-    ops_report = OperationalMRP.get_operational_report()
+    ops_report = OperationalMRP.get_operational_report(months_multiplier)
     
-    # Calculate simple profit/loss (monthly basis projection)
-    total_revenue_estimasi = (milk_report["estimated_revenue_today"] * 30) + (ops_report["iuran_wajib_total_estimasi"]) + (waste_report["total_ready_kg"] * waste_report["current_price_per_kg"])
-    total_expense_estimasi = (feed_report["daily_feed_cost"] * 30) + ops_report["barn_cleaning_cost_per_month"]
+    # Penjualan Susu
+    milk_monthly = db_fetch_one("SELECT SUM(estimated_revenue) FROM milk_financials WHERE date >= ? AND date <= ?", (start_date, end_date))
+    real_milk_revenue = milk_monthly[0] if milk_monthly and milk_monthly[0] else 0.0
+    
+    # Penjualan Pupuk
+    waste_monthly = db_fetch_one("SELECT SUM(estimated_revenue) FROM waste_financials WHERE date >= ? AND date <= ?", (start_date, end_date))
+    real_waste_revenue = waste_monthly[0] if waste_monthly and waste_monthly[0] else 0.0
+    
+    # Beli Pakan Ternak
+    feed_monthly = db_fetch_one("SELECT SUM(estimated_expense) FROM feed_financials WHERE date >= ? AND date <= ?", (start_date, end_date))
+    real_feed_cost = feed_monthly[0] if feed_monthly and feed_monthly[0] else 0.0
+    
+    # Operasional Lainnya
+    ops_monthly = db_fetch_one("SELECT SUM(amount) FROM operational_transactions WHERE date >= ? AND date <= ?", (start_date, end_date))
+    real_ops_cost = ops_monthly[0] if ops_monthly and ops_monthly[0] else 0.0
+    
+    # Override hardcoded operasional_lain with real database sum (but fallback to ops_report multiplier if no real ops_cost found)
+    ops_report["operasional_lain"] = real_ops_cost if real_ops_cost > 0 else (500000.0 * months_multiplier)
+
+    total_revenue_estimasi = real_milk_revenue + real_waste_revenue
+    total_expense_estimasi = real_feed_cost + ops_report["gaji_pj_kandang"] + ops_report["jaminan_kesehatan"] + ops_report["operasional_lain"]
     net_profit_estimasi = total_revenue_estimasi - total_expense_estimasi
 
     return {
@@ -168,6 +222,10 @@ def get_aggregate_report():
         "waste": waste_report,
         "operational": ops_report,
         "summary": {
+            "real_milk_revenue": real_milk_revenue,
+            "real_waste_revenue": real_waste_revenue,
+            "real_feed_cost": real_feed_cost,
+            "real_ops_cost": real_ops_cost,
             "total_revenue_estimasi": total_revenue_estimasi,
             "total_expense_estimasi": total_expense_estimasi,
             "net_profit_estimasi": net_profit_estimasi

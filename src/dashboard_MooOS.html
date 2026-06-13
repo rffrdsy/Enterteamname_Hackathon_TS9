@@ -64,8 +64,7 @@
                             <div>
                                 <h4 class="text-xs font-bold text-orange-800 uppercase tracking-wide">Peringatan Stok
                                 </h4>
-                                <p class="text-sm text-orange-700 mt-1 font-medium">Stok pakan diperkirakan habis dalam
-                                    8 hari.</p>
+                                <p id="insight-feed" class="text-sm text-orange-700 mt-1 font-medium">Stok pakan diperkirakan habis dalam 8 hari.</p>
                             </div>
                         </div>
                         <div class="rounded-xl border border-blue-100 bg-blue-50/50 p-4 flex items-start gap-3">
@@ -77,8 +76,7 @@
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wide">Tren Produksi</h4>
-                                <p class="text-sm text-blue-700 mt-1 font-medium">Produksi susu naik 12% dibanding
-                                    minggu lalu.</p>
+                                <p id="insight-milk" class="text-sm text-blue-700 mt-1 font-medium">Produksi susu naik 12% dibanding minggu lalu.</p>
                             </div>
                         </div>
                         <div class="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 flex items-start gap-3">
@@ -91,8 +89,7 @@
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wide">Pendapatan</h4>
-                                <p class="text-sm text-emerald-700 mt-1 font-medium">Pendapatan meningkat 8% bulan ini.
-                                </p>
+                                <p id="insight-revenue" class="text-sm text-emerald-700 mt-1 font-medium">Pendapatan meningkat 8% bulan ini.</p>
                             </div>
                         </div>
                         <div class="rounded-xl border border-teal-100 bg-teal-50/50 p-4 flex items-start gap-3">
@@ -105,8 +102,7 @@
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wide">Pupuk Organik</h4>
-                                <p class="text-sm text-teal-700 mt-1 font-medium">Menyumbang 15% dari total pemasukan
-                                    bulan ini.</p>
+                                <p id="insight-waste" class="text-sm text-teal-700 mt-1 font-medium">Menyumbang 15% dari total pemasukan bulan ini.</p>
                             </div>
                         </div>
                     </div>
@@ -133,7 +129,7 @@
                                 </span>
                             </div>
                             <div class="mt-4">
-                                <h4 class="text-2xl font-bold text-slate-800">128 Ekor</h4>
+                                <h4 id="kpi-cows" class="text-2xl font-bold text-slate-800">128 Ekor</h4>
                                 <span class="text-sm font-medium text-gray-500">Sapi Perah Aktif</span>
                             </div>
                         </div>
@@ -157,7 +153,7 @@
                                 </span>
                             </div>
                             <div class="mt-4">
-                                <h4 class="text-2xl font-bold text-slate-800">2,300 Kg</h4>
+                                <h4 id="kpi-feed" class="text-2xl font-bold text-slate-800">2,300 Kg</h4>
                                 <span class="text-sm font-medium text-gray-500">Stok Pakan</span>
                             </div>
                         </div>
@@ -181,7 +177,7 @@
                                 </span>
                             </div>
                             <div class="mt-4">
-                                <h4 class="text-2xl font-bold text-slate-800">220 Liter</h4>
+                                <h4 id="kpi-milk" class="text-2xl font-bold text-slate-800">220 Liter</h4>
                                 <span class="text-sm font-medium text-gray-500">Produksi Susu Hari Ini</span>
                             </div>
                         </div>
@@ -205,7 +201,7 @@
                                 </span>
                             </div>
                             <div class="mt-4">
-                                <h4 class="text-2xl font-bold text-slate-800">Rp145.000.000</h4>
+                                <h4 id="kpi-revenue" class="text-2xl font-bold text-slate-800">Rp145.000.000</h4>
                                 <span class="text-sm font-medium text-gray-500">Pendapatan Bulan Ini</span>
                             </div>
                         </div>
@@ -315,19 +311,19 @@
                                     </li>
                                     <li class="flex items-center justify-between">
                                         <span class="text-sm text-gray-500">Telegram Bot</span>
-                                        <span
+                                        <span id="status-tele"
                                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span
                                                 class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Connected</span>
                                     </li>
                                     <li class="flex items-center justify-between">
                                         <span class="text-sm text-gray-500">Database</span>
-                                        <span
+                                        <span id="status-db"
                                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span
                                                 class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Healthy</span>
                                     </li>
                                     <li class="flex items-center justify-between">
                                         <span class="text-sm text-gray-500">Sinkronisasi Terakhir</span>
-                                        <span class="text-sm font-medium text-slate-800">2 menit lalu</span>
+                                        <span id="status-sync" class="text-sm font-medium text-slate-800">2 menit lalu</span>
                                     </li>
                                 </ul>
                             </div>
@@ -336,7 +332,7 @@
                             <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
                                 <h3 class="text-base font-bold text-slate-800 mb-4">Aksi Cepat</h3>
                                 <div class="grid grid-cols-2 gap-3">
-                                    <button
+                                    <button onclick="window.location.href='tambah_ternak_MooOS.html'"
                                         class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-200 transition-colors">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -344,7 +340,7 @@
                                         </svg>
                                         <span class="text-xs font-bold text-center">Tambah Sapi</span>
                                     </button>
-                                    <button
+                                    <button onclick="window.location.href='pakan_MooOS.html'"
                                         class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-200 transition-colors">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -353,7 +349,7 @@
                                         </svg>
                                         <span class="text-xs font-bold text-center">PO Pakan</span>
                                     </button>
-                                    <button
+                                    <button onclick="window.location.href='hasil_MooOS.html'"
                                         class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-200 transition-colors">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -362,7 +358,7 @@
                                         </svg>
                                         <span class="text-xs font-bold text-center">Catat Susu</span>
                                     </button>
-                                    <button
+                                    <button onclick="window.location.href='laporan_MooOS.html'"
                                         class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200 transition-colors">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -407,16 +403,16 @@
                                 <div class="border-t border-gray-100 pt-4 space-y-3">
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm font-medium text-gray-500">Total Pemasukan</span>
-                                        <span class="text-sm font-bold text-emerald-600">Rp145.000.000</span>
+                                        <span id="rev-total" class="text-sm font-bold text-emerald-600">Rp145.000.000</span>
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm font-medium text-gray-500">Total Pengeluaran</span>
-                                        <span class="text-sm font-bold text-red-600">-Rp60.000.000</span>
+                                        <span id="rev-expense" class="text-sm font-bold text-red-600">-Rp60.000.000</span>
                                     </div>
                                     <div
                                         class="flex items-center justify-between border-t border-dashed border-gray-200 pt-3">
                                         <span class="text-base font-bold text-slate-800">Laba Bersih</span>
-                                        <span class="text-base font-bold text-slate-800">Rp85.000.000</span>
+                                        <span id="rev-net" class="text-base font-bold text-slate-800">Rp85.000.000</span>
                                     </div>
                                 </div>
                             </div>
@@ -505,121 +501,134 @@
             <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
             <script>
                 document.addEventListener("DOMContentLoaded", function () {
-                    // 1. Chart Feed
+                    // Chart Templates
                     const feedOptions = {
-                        series: [{
-                            name: 'Konsumsi (Kg)',
-                            data: [195, 201, 198, 210, 205, 209, 202]
-                        }],
-                        chart: {
-                            type: 'line',
-                            height: 250,
-                            toolbar: { show: false },
-                            fontFamily: 'Inter, sans-serif'
-                        },
+                        series: [{ name: 'Konsumsi (Kg)', data: [] }],
+                        chart: { type: 'line', height: 250, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
                         colors: ['#f59e0b'],
-                        stroke: {
-                            curve: 'smooth',
-                            width: 3
-                        },
-                        xaxis: {
-                            categories: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-                            labels: { style: { colors: '#64748b' } }
-                        },
-                        yaxis: {
-                            labels: { style: { colors: '#64748b' } }
-                        },
-                        grid: {
-                            borderColor: '#f1f5f9',
-                            strokeDashArray: 4
-                        },
-                        markers: {
-                            size: 5,
-                            colors: '#fff',
-                            strokeColors: '#f59e0b',
-                            strokeWidth: 2
-                        }
+                        stroke: { curve: 'smooth', width: 3 },
+                        xaxis: { categories: [], labels: { style: { colors: '#64748b' } } },
+                        yaxis: { labels: { style: { colors: '#64748b' } } },
+                        grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+                        markers: { size: 5, colors: '#fff', strokeColors: '#f59e0b', strokeWidth: 2 }
                     };
-                    new ApexCharts(document.querySelector("#chartFeed"), feedOptions).render();
 
-                    // 2. Chart Milk
                     const milkOptions = {
-                        series: [{
-                            name: 'Produksi (Liter)',
-                            data: [210, 212, 208, 215, 218, 216, 220, 219, 222, 220]
-                        }],
-                        chart: {
-                            type: 'area',
-                            height: 250,
-                            toolbar: { show: false },
-                            fontFamily: 'Inter, sans-serif'
-                        },
+                        series: [{ name: 'Produksi (Liter)', data: [] }],
+                        chart: { type: 'area', height: 250, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
                         colors: ['#3b82f6'],
-                        fill: {
-                            type: 'gradient',
-                            gradient: {
-                                shadeIntensity: 1,
-                                opacityFrom: 0.4,
-                                opacityTo: 0.05,
-                                stops: [0, 90, 100]
-                            }
-                        },
+                        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] } },
                         dataLabels: { enabled: false },
                         stroke: { curve: 'smooth', width: 2 },
-                        xaxis: {
-                            categories: ['H-9', 'H-8', 'H-7', 'H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'H-1', 'Hr Ini'],
-                            labels: { style: { colors: '#64748b' } }
-                        },
-                        yaxis: {
-                            labels: { style: { colors: '#64748b' } }
-                        },
-                        grid: {
-                            borderColor: '#f1f5f9',
-                            strokeDashArray: 4
-                        }
+                        xaxis: { categories: [], labels: { style: { colors: '#64748b' } } },
+                        yaxis: { labels: { style: { colors: '#64748b' } } },
+                        grid: { borderColor: '#f1f5f9', strokeDashArray: 4 }
                     };
-                    new ApexCharts(document.querySelector("#chartMilk"), milkOptions).render();
 
-                    // 3. Chart Revenue (Donut)
                     const revOptions = {
-                        series: [70, 15, 15],
-                        labels: ['Penjualan Susu', 'Pupuk Organik', 'Lainnya'],
-                        chart: {
-                            type: 'donut',
-                            height: 200,
-                            fontFamily: 'Inter, sans-serif'
-                        },
+                        series: [],
+                        labels: [],
+                        chart: { type: 'donut', height: 200, fontFamily: 'Inter, sans-serif' },
                         colors: ['#3b82f6', '#10b981', '#6366f1'],
                         dataLabels: { enabled: false },
                         legend: { show: false },
-                        plotOptions: {
-                            pie: {
-                                donut: {
-                                    size: '75%',
-                                    labels: {
-                                        show: true,
-                                        name: { show: false },
-                                        value: {
-                                            show: true,
-                                            fontSize: '24px',
-                                            fontWeight: 700,
-                                            color: '#1e293b'
-                                        },
-                                        total: {
-                                            show: true,
-                                            showAlways: true,
-                                            label: 'Total',
-                                            color: '#64748b',
-                                            formatter: function (w) {
-                                                return "100%"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        plotOptions: { pie: { donut: { size: '75%', labels: { show: true, name: { show: false }, value: { show: true, fontSize: '24px', fontWeight: 700, color: '#1e293b' }, total: { show: true, showAlways: true, label: 'Total', color: '#64748b', formatter: function () { return "100%" } } } } } }
                     };
-                    new ApexCharts(document.querySelector("#chartRevenue"), revOptions).render();
+
+                    // Fetch Data from Backend
+                    const API = 'http://localhost:8000';
+                    async function fetchDashboardData() {
+                        try {
+                            const [resCows, resMilk, resFin, resHealth] = await Promise.all([
+                                fetch(`${API}/cows`),
+                                fetch(`${API}/milk/summary`),
+                                fetch(`${API}/api/financials/report`),
+                                fetch(`${API}/health`)
+                            ]);
+
+                            const cows = await resCows.json();
+                            const milkData = await resMilk.json();
+                            const finData = await resFin.json();
+                            const health = await resHealth.json();
+
+                            // 1. KPIs
+                            document.getElementById('kpi-cows').innerText = cows.length + ' Ekor';
+                            document.getElementById('kpi-milk').innerText = milkData.total_today + ' Liter';
+                            
+                            const formatRp = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
+                            const revTotal = finData.summary.total_revenue_estimasi;
+                            document.getElementById('kpi-revenue').innerText = formatRp(revTotal);
+                            
+                            const feedStock = finData.feed.current_stock_kg || 0;
+                            document.getElementById('kpi-feed').innerText = feedStock + ' Kg';
+
+                            // 2. Insights
+                            const dailyFeed = finData.feed.daily_feed_needed_kg || 1;
+                            const feedDays = Math.floor(feedStock / dailyFeed);
+                            document.getElementById('insight-feed').innerText = `Stok pakan diperkirakan habis dalam ${feedDays} hari.`;
+
+                            if (milkData.history && milkData.history.length > 1) {
+                                const todayMilk = milkData.total_today;
+                                const pastMilk = milkData.history[Math.max(0, milkData.history.length - 8)].liters || 1;
+                                const milkPct = Math.round(((todayMilk - pastMilk) / pastMilk) * 100);
+                                document.getElementById('insight-milk').innerText = `Produksi susu ${milkPct >= 0 ? 'naik' : 'turun'} ${Math.abs(milkPct)}% dibanding minggu lalu.`;
+                            }
+
+                            document.getElementById('insight-revenue').innerText = `Pendapatan bersih diprediksi: ${formatRp(finData.summary.net_profit_estimasi)} bulan ini.`;
+                            
+                            const wasteRev = finData.waste.total_ready_kg * finData.waste.current_price_per_kg;
+                            const wastePct = revTotal > 0 ? Math.round((wasteRev / revTotal) * 100) : 0;
+                            document.getElementById('insight-waste').innerText = `Menyumbang ${wastePct}% dari total pemasukan bulan ini.`;
+
+                            // 3. Charts
+                            const feedHistory = finData.feed.history.slice(-7);
+                            feedOptions.series[0].data = feedHistory.map(x => x.total_kg || 0);
+                            feedOptions.xaxis.categories = feedHistory.map(x => x.date.split('-').slice(1).join('/'));
+                            new ApexCharts(document.querySelector("#chartFeed"), feedOptions).render();
+
+                            const milkHistory = milkData.history.slice(-10);
+                            milkOptions.series[0].data = milkHistory.map(x => x.total_liters || x.liters || 0);
+                            milkOptions.xaxis.categories = milkHistory.map(x => x.date.split('-').slice(1).join('/'));
+                            new ApexCharts(document.querySelector("#chartMilk"), milkOptions).render();
+
+                            const milkRev = milkData.estimated_revenue_month || (milkData.estimated_revenue_today * 30) || 0;
+                            const validWasteRev = wasteRev || 0;
+                            const iuranWajib = finData.operational.simpanan_wajib_total || 0;
+                            revOptions.series = [milkRev, validWasteRev, iuranWajib];
+                            revOptions.labels = ['Penjualan Susu', 'Pupuk Organik', 'Simpanan Wajib'];
+                            new ApexCharts(document.querySelector("#chartRevenue"), revOptions).render();
+
+                            // 4. Detailed Revenue
+                            document.getElementById('rev-total').innerText = formatRp(revTotal);
+                            document.getElementById('rev-expense').innerText = '-' + formatRp(finData.summary.total_expense_estimasi);
+                            document.getElementById('rev-net').innerText = formatRp(finData.summary.net_profit_estimasi);
+
+                            // 5. System Status
+                            const dbEl = document.getElementById('status-db');
+                            if(health.database.healthy) {
+                                dbEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Healthy`;
+                                dbEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700";
+                            } else {
+                                dbEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Error`;
+                                dbEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700";
+                            }
+
+                            const teleEl = document.getElementById('status-tele');
+                            if(health.telegram_bot.connected) {
+                                teleEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Connected`;
+                                teleEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700";
+                            } else {
+                                teleEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Disconnected`;
+                                teleEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700";
+                            }
+
+                            document.getElementById('status-sync').innerText = health.last_sync;
+                        } catch (err) {
+                            console.error("Gagal mengambil data dashboard:", err);
+                        }
+                    }
+
+                    fetchDashboardData();
                 });
             </script>
         </div>

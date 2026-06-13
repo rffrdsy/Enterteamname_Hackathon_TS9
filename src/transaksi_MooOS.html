@@ -46,7 +46,7 @@
             </div>
             <div class="flex items-center gap-3">
               <!-- Filter Periode -->
-              <select id="filter-periode"
+              <select id="filter-periode" onchange="loadAllData()"
                 class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
                 <option value="all">Semua Waktu</option>
                 <option value="30">30 Hari Terakhir</option>
@@ -308,18 +308,21 @@
       icon.classList.add('animate-spin');
 
       try {
-        const [cowsRes, feedRes] = await Promise.all([
+        const period = document.getElementById('filter-periode')?.value || 'all';
+        const [cowsRes, feedRes, reportRes] = await Promise.all([
           fetch(`${API}/cows`),
-          fetch(`${API}/feed-orders`)
+          fetch(`${API}/feed-orders`),
+          fetch(`${API}/api/financials/report?period=${period}`)
         ]);
 
         const cows = cowsRes.ok ? await cowsRes.json() : [];
         const feeds = feedRes.ok ? await feedRes.json() : [];
+        const report = reportRes.ok ? await reportRes.json() : null;
 
-        buildTransactions(cows, feeds);
-        buildSummaryCards(cows, feeds);
+        buildTransactions(cows, feeds, report);
+        buildSummaryCards(cows, feeds, report);
         buildFeedOrderList(feeds);
-        buildChart(cows, feeds);
+        buildChart(cows, feeds, report);
 
       } catch (err) {
         showError(`Gagal memuat data: ${err.message}. Pastikan backend berjalan di port 8000.`);
@@ -329,7 +332,7 @@
     }
 
     // ── Build transaksi gabungan ──────────────────────────────────────
-    function buildTransactions(cows, feeds) {
+    function buildTransactions(cows, feeds, report) {
       allTransaksi = [];
 
       // Pemasukan: sapi terjual
@@ -367,6 +370,37 @@
           dokumenLabel: null,
         });
       });
+      
+      if (report) {
+        // Pemasukan: Jual Susu
+        if (report.milk && report.milk.history) {
+          report.milk.history.forEach((m, idx) => {
+            allTransaksi.push({
+              id: `TRX-SUSU-${m.date.replace(/-/g,'')}`,
+              jenis: 'pemasukan',
+              keterangan: `Penjualan Susu — ${m.date} (${m.liters} L)`,
+              nominal: m.revenue,
+              status: 'SELESAI',
+              statusCls: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+              dokumen: null,
+            });
+          });
+        }
+        // Pemasukan: Jual Pupuk
+        if (report.waste && report.waste.history) {
+          report.waste.history.forEach((w, idx) => {
+            allTransaksi.push({
+              id: `TRX-PUPUK-${w.date.replace(/-/g,'')}`,
+              jenis: 'pemasukan',
+              keterangan: `Penjualan Pupuk — ${w.date} (${w.fertilizer} kg)`,
+              nominal: w.price * w.fertilizer,
+              status: 'SELESAI',
+              statusCls: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+              dokumen: null,
+            });
+          });
+        }
+      }
 
       renderTable(allTransaksi);
     }
@@ -434,17 +468,29 @@
     }
 
     // ── Build summary cards ──────────────────────────────────────────
-    function buildSummaryCards(cows, feeds) {
+    function buildSummaryCards(cows, feeds, report) {
       const soldCows = cows.filter(c => c.status === 'SOLD');
-      const totalPemasukan = soldCows.reduce((sum, c) => sum + (c.weight ? c.weight * HARGA_PER_KG : 0), 0);
-      const totalPengeluaran = feeds.reduce((sum, f) => sum + ((f.qty || 0) * (f.price_per_kg || 5000)), 0);
-      const netCash = totalPemasukan - totalPengeluaran;
+      const totalSapiPemasukan = soldCows.reduce((sum, c) => sum + (c.weight ? c.weight * HARGA_PER_KG : 0), 0);
+      const totalPakanPengeluaran = (report && report.summary) ? report.summary.real_feed_cost : feeds.reduce((sum, f) => sum + ((f.qty || 0) * (f.price_per_kg || 5000)), 0);
       const totalBerat = soldCows.reduce((sum, c) => sum + (c.weight || 0), 0);
 
+      let totalPemasukan = totalSapiPemasukan;
+      let totalPengeluaran = totalPakanPengeluaran;
+
+      if (report && report.summary) {
+        totalPemasukan += (report.summary.real_milk_revenue || 0) + (report.summary.real_waste_revenue || 0);
+        totalPengeluaran += (report.summary.real_ops_cost || 0);
+      }
+
+      const netCash = totalPemasukan - totalPengeluaran;
+
+      const trxCount = allTransaksi.filter(t => t.jenis === 'pemasukan').length;
+      const pengCount = allTransaksi.filter(t => t.jenis === 'pengeluaran').length;
+
       document.getElementById('stat-pemasukan').textContent = formatRupiah(totalPemasukan);
-      document.getElementById('stat-pemasukan-count').textContent = `${soldCows.length} transaksi penjualan`;
+      document.getElementById('stat-pemasukan-count').textContent = `${trxCount} transaksi pemasukan`;
       document.getElementById('stat-pengeluaran').textContent = formatRupiah(totalPengeluaran);
-      document.getElementById('stat-pengeluaran-count').textContent = `${feeds.length} order pakan`;
+      document.getElementById('stat-pengeluaran-count').textContent = `${pengCount} transaksi pengeluaran`;
       document.getElementById('stat-netcash').textContent = formatRupiah(Math.abs(netCash));
       document.getElementById('stat-terjual').textContent = soldCows.length;
       document.getElementById('stat-terjual-berat').textContent = `${totalBerat.toLocaleString('id-ID')} kg total berat`;
@@ -490,7 +536,7 @@
     }
 
     // ── Build Chart.js grafik ────────────────────────────────────────
-    function buildChart(cows, feeds) {
+    function buildChart(cows, feeds, report) {
       const chartLoading = document.getElementById('chart-loading');
       const canvas = document.getElementById('cashflow-chart');
 
@@ -506,30 +552,53 @@
         });
       }
 
-      // Untuk sapi SOLD — distribusikan merata karena tidak ada tanggal di schema
-      // Idealnya backend menyimpan sold_at. Untuk demo, kita sebaran ke bulan terakhir.
       const soldCows = cows.filter(c => c.status === 'SOLD');
       const feedOrders = feeds;
 
-      // Hitung nilai per bulan (demo: spread merata jika tidak ada timestamp)
       const pemasukanPerBulan = months.map((m, idx) => {
-        // Bagi merata ke bulan terakhir untuk demo
-        if (soldCows.length === 0) return 0;
+        let sum = 0;
+        // sapi merata fallback
         const perBulan = Math.floor(soldCows.length / 6);
         const extra = idx === 5 ? soldCows.length % 6 : 0;
         const cowsInMonth = soldCows.slice(idx * perBulan, (idx + 1) * perBulan + (idx === 5 ? extra : 0));
-        return cowsInMonth.reduce((s, c) => s + (c.weight ? c.weight * HARGA_PER_KG : 0), 0);
+        sum += cowsInMonth.reduce((s, c) => s + (c.weight ? c.weight * HARGA_PER_KG : 0), 0);
+        
+        // Data dari report (milk dan waste history)
+        if (report) {
+          if (report.milk && report.milk.history) {
+            report.milk.history.forEach(hx => {
+              const d = new Date(hx.date);
+              if (d.getFullYear() === m.year && d.getMonth() === m.month) sum += hx.revenue;
+            });
+          }
+          if (report.waste && report.waste.history) {
+            report.waste.history.forEach(hx => {
+              const d = new Date(hx.date);
+              if (d.getFullYear() === m.year && d.getMonth() === m.month) sum += (hx.price * hx.fertilizer);
+            });
+          }
+        }
+        return sum;
       });
 
       const pengeluaranPerBulan = months.map((m, idx) => {
-        if (feedOrders.length === 0) return 0;
+        let sum = 0;
+        // Pakan PO merata fallback
         const perBulan = Math.floor(feedOrders.length / 6);
         const extra = idx === 5 ? feedOrders.length % 6 : 0;
         const ordersInMonth = feedOrders.slice(idx * perBulan, (idx + 1) * perBulan + (idx === 5 ? extra : 0));
-        return ordersInMonth.reduce((s, f) => s + (f.qty || 0) * (f.price_per_kg || 5000), 0);
+        sum += ordersInMonth.reduce((s, f) => s + (f.qty || 0) * (f.price_per_kg || 5000), 0);
+        
+        // Pakan history
+        if (report && report.feed && report.feed.history) {
+           report.feed.history.forEach(hx => {
+             const d = new Date(hx.date);
+             if (d.getFullYear() === m.year && d.getMonth() === m.month) sum += (hx.price * hx.total_kg);
+           });
+        }
+        return sum;
       });
 
-      // Jika data kosong, tampilkan data dummy untuk menunjukkan grafik
       const hasData = pemasukanPerBulan.some(v => v > 0) || pengeluaranPerBulan.some(v => v > 0);
       const finalPemasukan = hasData ? pemasukanPerBulan : [8500000, 12000000, 9800000, 15000000, 11500000, 13200000];
       const finalPengeluaran = hasData ? pengeluaranPerBulan : [2500000, 3200000, 2800000, 4100000, 3500000, 3800000];

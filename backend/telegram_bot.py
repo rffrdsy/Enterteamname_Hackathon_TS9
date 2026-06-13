@@ -760,7 +760,7 @@ Sapi telah resmi terjual.
     elif call.data.startswith("lapor_susu_"):
         barn = call.data.replace("lapor_susu_", "")
         
-        cursor.execute("SELECT cow_code FROM cows WHERE barn = ? AND status NOT IN ('SOLD', 'DEAD', 'REJECTED') AND jenis = 'Perah'", (barn,))
+        cursor.execute("SELECT cow_code FROM cows WHERE barn = ? AND status NOT IN ('SOLD', 'DEAD', 'REJECTED') AND (jenis = 'Perah' OR lactate_status = 'Laktasi')", (barn,))
         rows = cursor.fetchall()
         
         if not rows:
