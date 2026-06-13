@@ -28,7 +28,8 @@
           <div class="flex justify-between items-end">
             <div class="space-y-1">
               <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Limbah & Pupuk Organik</h1>
-              <p class="text-sm text-gray-500">Kelola limbah kotoran sapi dan proses fermentasi menjadi pupuk organik bernilai jual</p>
+              <p class="text-sm text-gray-500">Kelola limbah kotoran sapi dan proses fermentasi menjadi pupuk organik
+                bernilai jual</p>
             </div>
             <button onclick="collectDailyWaste()"
               class="inline-flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-semibold transition-colors shadow-sm cursor-pointer">
@@ -63,7 +64,7 @@
                 <span class="text-sm text-gray-500">/kg</span>
               </div>
             </div>
-            
+
             <div class="bg-white border border-gray-200 rounded-md p-6">
               <span class="block text-sm font-semibold text-gray-500">Estimasi Nilai Total</span>
               <div class="flex items-baseline gap-1 mt-2">
@@ -108,7 +109,7 @@
       try {
         const res = await fetch(`${API}/api/financials/waste`);
         const data = await res.json();
-        
+
         document.getElementById('daily-waste').textContent = data.daily_waste_kg_fresh || data.daily_waste_kg || 0;
         document.getElementById('active-cows').textContent = `${data.active_cows} sapi aktif (@ 10kg/hari)`;
         document.getElementById('ready-fertilizer').textContent = data.total_ready_kg;
@@ -126,7 +127,7 @@
     function renderBatches(batches) {
       const list = document.getElementById('batch-list');
       list.innerHTML = '';
-      if(batches.length === 0) {
+      if (batches.length === 0) {
         list.innerHTML = '<li class="p-6 text-center text-gray-500 text-sm">Belum ada data proses fermentasi</li>';
         return;
       }
@@ -136,8 +137,8 @@
         const color = isReady ? 'green' : 'orange';
         const label = isReady ? 'Siap Jual' : 'Fermentasi';
         const dateObj = new Date(b.date_collected);
-        const dateStr = `${dateObj.getDate()} ${dateObj.toLocaleString('id-ID', {month: 'short'})}`;
-        
+        const dateStr = `${dateObj.getDate()} ${dateObj.toLocaleString('id-ID', { month: 'short' })}`;
+
         list.innerHTML += `
           <li class="px-6 py-4 hover:bg-gray-50 flex items-center justify-between">
             <div>
@@ -157,7 +158,7 @@
       const ctx = document.getElementById('priceChart').getContext('2d');
       const labels = history.map(h => {
         const d = new Date(h.date);
-        return `${d.getDate()} ${d.toLocaleString('id-ID', {month: 'short'})}`;
+        return `${d.getDate()} ${d.toLocaleString('id-ID', { month: 'short' })}`;
       });
       const data = history.map(h => h.price);
 
@@ -199,15 +200,16 @@
       try {
         const res = await fetch(`${API}/api/financials/waste/collect`, { method: 'POST' });
         const data = await res.json();
-        if(typeof showToast==='function') showToast(data.message, 'success');
+        if (typeof showToast === 'function') showToast(data.message, 'success');
         loadLimbahData();
       } catch (err) {
         console.error("Gagal collect waste:", err);
-        if(typeof showToast==='function') showToast('Gagal mencatat limbah harian.', 'error');
+        if (typeof showToast === 'function') showToast('Gagal mencatat limbah harian.', 'error');
       }
     }
 
     document.addEventListener('DOMContentLoaded', loadLimbahData);
   </script>
 </body>
+
 </html>

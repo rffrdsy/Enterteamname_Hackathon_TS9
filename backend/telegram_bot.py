@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 import telebot
 import time
 
@@ -17,6 +18,7 @@ SUPPLIER_NAMES = {
 }
 from models import get_session, Session, Cow, FeedOrder, FeedOrderRecipient, MessageRef, DailyKandangLog
 
+# pyrefly: ignore [missing-import]
 from telebot.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton
@@ -824,7 +826,6 @@ Sapi telah resmi terjual.
             if cow_obj:
                 cow_obj.litre_milked_today = liters
         
-        from datetime import datetime
         today = datetime.now().strftime("%Y-%m-%d")
         telegram_id = call.from_user.id
         session.add(DailyKandangLog(date=today, barn=state['barn'], type='SUSU', telegram_id=telegram_id))

@@ -64,7 +64,8 @@
                             <div>
                                 <h4 class="text-xs font-bold text-orange-800 uppercase tracking-wide">Peringatan Stok
                                 </h4>
-                                <p id="insight-feed" class="text-sm text-orange-700 mt-1 font-medium">Stok pakan diperkirakan habis dalam 8 hari.</p>
+                                <p id="insight-feed" class="text-sm text-orange-700 mt-1 font-medium">Stok pakan
+                                    diperkirakan habis dalam 8 hari.</p>
                             </div>
                         </div>
                         <div class="rounded-xl border border-blue-100 bg-blue-50/50 p-4 flex items-start gap-3">
@@ -76,7 +77,8 @@
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wide">Tren Produksi</h4>
-                                <p id="insight-milk" class="text-sm text-blue-700 mt-1 font-medium">Produksi susu naik 12% dibanding minggu lalu.</p>
+                                <p id="insight-milk" class="text-sm text-blue-700 mt-1 font-medium">Produksi susu naik
+                                    12% dibanding minggu lalu.</p>
                             </div>
                         </div>
                         <div class="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 flex items-start gap-3">
@@ -89,7 +91,8 @@
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wide">Pendapatan</h4>
-                                <p id="insight-revenue" class="text-sm text-emerald-700 mt-1 font-medium">Pendapatan meningkat 8% bulan ini.</p>
+                                <p id="insight-revenue" class="text-sm text-emerald-700 mt-1 font-medium">Pendapatan
+                                    meningkat 8% bulan ini.</p>
                             </div>
                         </div>
                         <div class="rounded-xl border border-teal-100 bg-teal-50/50 p-4 flex items-start gap-3">
@@ -102,7 +105,8 @@
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wide">Pupuk Organik</h4>
-                                <p id="insight-waste" class="text-sm text-teal-700 mt-1 font-medium">Menyumbang 15% dari total pemasukan bulan ini.</p>
+                                <p id="insight-waste" class="text-sm text-teal-700 mt-1 font-medium">Menyumbang 15% dari
+                                    total pemasukan bulan ini.</p>
                             </div>
                         </div>
                     </div>
@@ -323,7 +327,8 @@
                                     </li>
                                     <li class="flex items-center justify-between">
                                         <span class="text-sm text-gray-500">Sinkronisasi Terakhir</span>
-                                        <span id="status-sync" class="text-sm font-medium text-slate-800">2 menit lalu</span>
+                                        <span id="status-sync" class="text-sm font-medium text-slate-800">2 menit
+                                            lalu</span>
                                     </li>
                                 </ul>
                             </div>
@@ -403,16 +408,19 @@
                                 <div class="border-t border-gray-100 pt-4 space-y-3">
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm font-medium text-gray-500">Total Pemasukan</span>
-                                        <span id="rev-total" class="text-sm font-bold text-emerald-600">Rp145.000.000</span>
+                                        <span id="rev-total"
+                                            class="text-sm font-bold text-emerald-600">Rp145.000.000</span>
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <span class="text-sm font-medium text-gray-500">Total Pengeluaran</span>
-                                        <span id="rev-expense" class="text-sm font-bold text-red-600">-Rp60.000.000</span>
+                                        <span id="rev-expense"
+                                            class="text-sm font-bold text-red-600">-Rp60.000.000</span>
                                     </div>
                                     <div
                                         class="flex items-center justify-between border-t border-dashed border-gray-200 pt-3">
                                         <span class="text-base font-bold text-slate-800">Laba Bersih</span>
-                                        <span id="rev-net" class="text-base font-bold text-slate-800">Rp85.000.000</span>
+                                        <span id="rev-net"
+                                            class="text-base font-bold text-slate-800">Rp85.000.000</span>
                                     </div>
                                 </div>
                             </div>
@@ -554,11 +562,11 @@
                             // 1. KPIs
                             document.getElementById('kpi-cows').innerText = cows.length + ' Ekor';
                             document.getElementById('kpi-milk').innerText = milkData.total_today + ' Liter';
-                            
+
                             const formatRp = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
                             const revTotal = finData.summary.total_revenue_estimasi;
                             document.getElementById('kpi-revenue').innerText = formatRp(revTotal);
-                            
+
                             const feedStock = finData.feed.current_stock_kg || 0;
                             document.getElementById('kpi-feed').innerText = feedStock + ' Kg';
 
@@ -575,7 +583,7 @@
                             }
 
                             document.getElementById('insight-revenue').innerText = `Pendapatan bersih diprediksi: ${formatRp(finData.summary.net_profit_estimasi)} bulan ini.`;
-                            
+
                             const wasteRev = finData.waste.total_ready_kg * finData.waste.current_price_per_kg;
                             const wastePct = revTotal > 0 ? Math.round((wasteRev / revTotal) * 100) : 0;
                             document.getElementById('insight-waste').innerText = `Menyumbang ${wastePct}% dari total pemasukan bulan ini.`;
@@ -605,7 +613,7 @@
 
                             // 5. System Status
                             const dbEl = document.getElementById('status-db');
-                            if(health.database.healthy) {
+                            if (health.database.healthy) {
                                 dbEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Healthy`;
                                 dbEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700";
                             } else {
@@ -614,7 +622,7 @@
                             }
 
                             const teleEl = document.getElementById('status-tele');
-                            if(health.telegram_bot.connected) {
+                            if (health.telegram_bot.connected) {
                                 teleEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Connected`;
                                 teleEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700";
                             } else {

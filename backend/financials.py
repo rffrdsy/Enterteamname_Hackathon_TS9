@@ -2,6 +2,7 @@
 Financial MRP logic with 60/40 profit sharing — ORM version.
 """
 import datetime
+# pyrefly: ignore [missing-import]
 from sqlalchemy import func
 from models import (
     get_session, Session,
@@ -49,7 +50,7 @@ class FeedMRP:
             daily_feed_cost = daily_feed_needed_kg * current_price_per_kg
             current_stock_kg = 2300.0
 
-            history = session.query(FeedFinancial).order_by(FeedFinancial.date.asc()).all()
+            history = session.query(FeedPriceHistory).order_by(FeedPriceHistory.date.asc()).all()
 
             return {
                 "active_cows": active_cows_count,
@@ -58,7 +59,7 @@ class FeedMRP:
                 "current_stock_kg": current_stock_kg,
                 "current_price_per_kg": current_price_per_kg,
                 "daily_feed_cost": daily_feed_cost,
-                "history": [{"date": r.date, "price": r.price_per_kg, "total_kg": r.total_kg} for r in history],
+                "history": [{"date": r.date, "price": r.price_per_kg} for r in history],
             }
         finally:
             Session.remove()
@@ -209,12 +210,15 @@ class OperationalMRP:
             simpanan_wajib_per_sapi = config.get("simpanan_wajib_per_sapi", 200000.0)
             simpanan_wajib_total = total_sapi * simpanan_wajib_per_sapi * months_multiplier
 
-            biaya_pakan = config.get("pakan_per_sapi", 750000.0) * total_sapi * months_multiplier
+            biaya_pakan = config.get("pakan_per_sapi", 1000000.0) * total_sapi * months_multiplier
+            
+            # The user explicitly requested fixed 5 workers and these fixed costs
             gaji_pekerja = config.get("jumlah_pekerja", 5.0) * config.get("gaji_per_pekerja", 3800000.0) * months_multiplier
             biaya_karung = config.get("biaya_karung", 350000.0) * months_multiplier
             biaya_em4 = config.get("biaya_fermentasi_em4", 202000.0) * months_multiplier
             biaya_distribusi = config.get("biaya_distribusi_susu", 800000.0) * months_multiplier
             biaya_utilitas = config.get("biaya_utilitas", 500000.0) * months_multiplier
+            
             total_biaya_ops = biaya_pakan + gaji_pekerja + biaya_karung + biaya_em4 + biaya_distribusi + biaya_utilitas
 
             return {
@@ -230,11 +234,11 @@ class OperationalMRP:
                 "biaya_utilitas": biaya_utilitas,
                 "total_biaya_ops": total_biaya_ops,
                 "config": {
-                    "bagi_hasil_koperasi": config.get("bagi_hasil_koperasi", 0.6),
-                    "bagi_hasil_pemilik": config.get("bagi_hasil_pemilik", 0.4),
+                    "bagi_hasil_koperasi": config.get("bagi_hasil_koperasi", 0.3),
+                    "bagi_hasil_pemilik": config.get("bagi_hasil_pemilik", 0.7),
                     "jumlah_pekerja": config.get("jumlah_pekerja", 5.0),
                     "gaji_per_pekerja": config.get("gaji_per_pekerja", 3800000.0),
-                    "pakan_per_sapi": config.get("pakan_per_sapi", 750000.0),
+                    "pakan_per_sapi": config.get("pakan_per_sapi", 1000000.0),
                     "simpanan_wajib_per_sapi": simpanan_wajib_per_sapi,
                 },
             }
@@ -283,14 +287,14 @@ def get_aggregate_report(period="all"):
         waste_report = WasteMRP.get_waste_report()
         ops_report = OperationalMRP.get_operational_report(months_multiplier)
 
-        # Revenue from DB
-        milk_sum = session.query(func.sum(MilkFinancial.estimated_revenue)).filter(
-            MilkFinancial.date >= start_date, MilkFinancial.date <= end_date
-        ).scalar() or 0.0
+        # Revenue projected based on current daily run rate to match the extrapolated expenses
+        days_in_period = 30 if period == "30" else 90 if period == "90" else 365 if period == "365" else max(1, months_multiplier * 30)
 
-        waste_sum = session.query(func.sum(WasteFinancial.estimated_revenue)).filter(
-            WasteFinancial.date >= start_date, WasteFinancial.date <= end_date
-        ).scalar() or 0.0
+        daily_milk_revenue = milk_report.get("estimated_revenue_today", 0.0)
+        daily_waste_revenue = waste_report.get("daily_fertilizer_kg", 0.0) * waste_report.get("current_price_per_kg", 0.0)
+
+        milk_sum = daily_milk_revenue * days_in_period
+        waste_sum = daily_waste_revenue * days_in_period
 
         feed_sum = session.query(func.sum(FeedFinancial.estimated_cost)).filter(
             FeedFinancial.date >= start_date, FeedFinancial.date <= end_date
@@ -300,9 +304,9 @@ def get_aggregate_report(period="all"):
             OperationalTransaction.date >= start_date, OperationalTransaction.date <= end_date
         ).scalar() or 0.0
 
-        # 60/40 split
-        bagi_koperasi = config.get("bagi_hasil_koperasi", 0.6)
-        bagi_pemilik = config.get("bagi_hasil_pemilik", 0.4)
+        # 30/70 split
+        bagi_koperasi = config.get("bagi_hasil_koperasi", 0.3)
+        bagi_pemilik = config.get("bagi_hasil_pemilik", 0.7)
 
         bagian_koperasi_susu = milk_sum * bagi_koperasi
         bagian_pemilik_susu = milk_sum * bagi_pemilik
