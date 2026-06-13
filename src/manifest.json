@@ -1,0 +1,19 @@
+{
+  "name": "MooOS - Manajemen Koperasi Sapi",
+  "short_name": "MooOS",
+  "description": "Sistem manajemen ternak sapi perah untuk Koperasi Harapan Baru",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#43A55A",
+  "categories": ["productivity", "business"],
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/images/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

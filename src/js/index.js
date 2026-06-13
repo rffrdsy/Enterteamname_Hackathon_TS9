@@ -7,6 +7,9 @@ import Alpine from "alpinejs";
 import persist from "@alpinejs/persist";
 import flatpickr from "flatpickr";
 import Dropzone from "dropzone";
+import ApexCharts from "apexcharts";
+
+window.ApexCharts = ApexCharts;
 
 import chart01 from "./components/charts/chart-01";
 import chart02 from "./components/charts/chart-02";

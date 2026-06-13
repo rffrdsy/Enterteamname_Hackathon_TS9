@@ -6,6 +6,7 @@ import uvicorn
 import os
 import mimetypes
 import qrcode
+import datetime
 from io import BytesIO
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -48,7 +49,8 @@ from telegram_bot import (
     start_bot,
     send_new_cow,
     send_sell_scan_request,
-    send_feed_order
+    send_feed_order,
+    set_bot_status_ref,
 )
 
 from config import (
@@ -71,6 +73,13 @@ QR_DIR = os.path.join(os.path.dirname(__file__), "qr_sapi")
 os.makedirs(QR_DIR, exist_ok=True)
 
 app = FastAPI(title="Mooos API", version="1.0.0")
+
+# Global bot status tracker — updated by telegram_bot thread
+BOT_STATUS = {
+    "connected": False,
+    "last_update_ts": None,   # Unix timestamp of last Telegram update received
+    "start_ts": time.time(),  # When the server started
+}
 
 # Allow frontend (any localhost port) to call this backend
 app.add_middleware(
@@ -124,6 +133,56 @@ class MemberRequest(BaseModel):
 @app.get("/")
 def home():
     return {"status": "running"}
+
+
+@app.get("/health")
+def health_check():
+    """Live system health check for the dashboard Status Sistem widget."""
+    # 1. Database check — a simple query to verify the connection is alive
+    db_healthy = False
+    try:
+        result = db_fetch_one("SELECT COUNT(*) FROM cows")
+        db_healthy = result is not None
+    except Exception:
+        db_healthy = False
+
+    # 2. Network / internet check — we report the local backend itself as "online"
+    #    The JS frontend can determine its own online/offline state via navigator.onLine
+    online = True  # Backend is reachable ↔ it's "online" from the client's perspective
+
+    # 3. Telegram bot status
+    bot_connected = BOT_STATUS["connected"]
+    last_update_ts = BOT_STATUS["last_update_ts"]
+
+    # Format "Sinkronisasi Terakhir"
+    if last_update_ts is not None:
+        delta = int(time.time() - last_update_ts)
+        if delta < 60:
+            last_sync = f"{delta} detik lalu"
+        elif delta < 3600:
+            last_sync = f"{delta // 60} menit lalu"
+        elif delta < 86400:
+            last_sync = f"{delta // 3600} jam lalu"
+        else:
+            last_sync = f"{delta // 86400} hari lalu"
+    else:
+        # Bot has never received an update since server start — show server uptime
+        uptime_s = int(time.time() - BOT_STATUS["start_ts"])
+        last_sync = f"Server baru menyala {uptime_s // 60} menit lalu"
+
+    return {
+        "online": online,
+        "telegram_bot": {
+            "connected": bot_connected,
+            "status": "Connected" if bot_connected else "Disconnected",
+        },
+        "database": {
+            "healthy": db_healthy,
+            "status": "Healthy" if db_healthy else "Error",
+        },
+        "last_sync": last_sync,
+    }
+
 
 
 @app.get("/members")
@@ -482,6 +541,78 @@ def get_feed_orders():
 
 
 # =============================================================
+# MILK PRODUCTION & FINANCIALS
+# =============================================================
+
+@app.get("/milk/summary")
+def get_milk_summary():
+    # 1. Total hari ini dari cows (Hanya yang Laktasi atau ada susu)
+    cows = db_fetch_all("SELECT id, cow_code, lactate_status, litre_milked_today FROM cows WHERE lactate_status = 'Laktasi' OR litre_milked_today > 0 ORDER BY cow_code")
+    total_today = sum((c[3] or 0.0) for c in cows)
+    
+    cow_details = []
+    for c in cows:
+        cow_details.append({
+            "id": c[0],
+            "cow_code": c[1],
+            "lactate_status": c[2] or "Kering",
+            "litre_milked_today": c[3] or 0.0
+        })
+        
+    # 2. Get past data
+    past_logs = db_fetch_all("SELECT date, total_liters, estimated_revenue FROM milk_financials ORDER BY date DESC LIMIT 30")
+    
+    total_week = total_today
+    total_month = total_today
+    
+    # Calculate for the past 6 days (to make a 7-day week)
+    for row in past_logs[:6]:
+        total_week += row[1] or 0.0
+        
+    # Calculate for the past 29 days (to make a 30-day month)
+    for row in past_logs[:29]:
+        total_month += row[1] or 0.0
+        
+    # Latest price from DB
+    latest_price = 6500.0
+    if past_logs:
+        latest_row = db_fetch_one("SELECT price_per_liter FROM milk_financials ORDER BY date DESC LIMIT 1")
+        if latest_row and latest_row[0]:
+            latest_price = latest_row[0]
+            
+    estimated_revenue_month = total_month * latest_price
+    
+    return {
+        "total_today": round(total_today, 1),
+        "total_week": round(total_week, 1),
+        "total_month": round(total_month, 1),
+        "latest_price": latest_price,
+        "estimated_revenue_month": round(estimated_revenue_month, 1),
+        "cows": cow_details,
+        "history": [{"date": r[0], "total_liters": r[1]} for r in past_logs[::-1]]  # chronological for chart
+    }
+
+@app.post("/milk/financials")
+def save_milk_financials(data: dict):
+    # expect data: {"date": "YYYY-MM-DD", "total_liters": 100, "price_per_liter": 6500, "estimated_revenue": 650000}
+    try:
+        db_execute(
+            """
+            INSERT INTO milk_financials (date, total_liters, price_per_liter, estimated_revenue)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(date) DO UPDATE SET
+                total_liters = excluded.total_liters,
+                price_per_liter = excluded.price_per_liter,
+                estimated_revenue = excluded.estimated_revenue
+            """,
+            (data.get("date"), data.get("total_liters", 0), data.get("price_per_liter", 0), data.get("estimated_revenue", 0))
+        )
+        return {"status": "ok"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================
 # SPK – Surat Penjualan Sapi
 # =============================================================
 
@@ -615,10 +746,15 @@ def download_spk_pdf(cow_code: str):
     )
 
 
+
+# Inject BOT_STATUS reference so telegram_bot.py can update live health status
+set_bot_status_ref(BOT_STATUS)
+
 threading.Thread(
     target=start_bot,
     daemon=True
 ).start()
+
 
 
 if __name__ == "__main__":

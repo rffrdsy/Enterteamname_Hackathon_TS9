@@ -132,5 +132,58 @@ if "iuran_pokok" not in members_cols:
             ORDER BY id ASC LIMIT 1 OFFSET 1
         )
     """)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS feed_financials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT UNIQUE,
+    total_kg REAL,
+    price_per_kg REAL,
+    estimated_cost REAL
+)
+""")
+
+# Inject dummy historical data for feed if empty
+cursor.execute("SELECT COUNT(*) FROM feed_financials")
+feed_count = cursor.fetchone()[0]
+if feed_count == 0:
+    import datetime as _dt2
+    import random as _rand2
+    _today2 = _dt2.date.today()
+    for _i in range(30, 0, -1):
+        _d = _today2 - _dt2.timedelta(days=_i)
+        _kg = round(_rand2.uniform(320, 420), 1)
+        _price = round(_rand2.uniform(4100, 4500), 0)
+        _cost = _kg * _price
+        cursor.execute(
+            "INSERT INTO feed_financials (date, total_kg, price_per_kg, estimated_cost) VALUES (?, ?, ?, ?)",
+            (_d.strftime("%Y-%m-%d"), _kg, _price, _cost)
+        )
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS milk_financials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT UNIQUE,
+    total_liters REAL,
+    price_per_liter REAL,
+    estimated_revenue REAL
+)
+""")
+
+# Inject dummy historical data for the last 30 days if empty
+cursor.execute("SELECT COUNT(*) FROM milk_financials")
+count = cursor.fetchone()[0]
+if count == 0:
+    import datetime
+    import random
+    today = datetime.date.today()
+    for i in range(30, 0, -1):
+        d = today - datetime.timedelta(days=i)
+        liters = round(random.uniform(280, 340), 1)
+        price = 4100.0  # Dummy price around normal market (or anything like 6000-7000 depending on actual milk price, we'll use 6500)
+        revenue = liters * 6500.0
+        cursor.execute(
+            "INSERT INTO milk_financials (date, total_liters, price_per_liter, estimated_revenue) VALUES (?, ?, ?, ?)",
+            (d.strftime("%Y-%m-%d"), liters, 6500.0, revenue)
+        )
 
 conn.commit()

@@ -3,523 +3,712 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <title>Dashboard | MooOS - Manajemen Ternak</title>
+  <title>MooOS – Manajemen Peternakan Sapi Modern</title>
+  <meta name="description"
+    content="MooOS adalah platform SaaS manajemen peternakan sapi modern. Pantau kesehatan ternak, kelola pakan, dan optimalkan produksi susu dalam satu layar." />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            plum: {
+              DEFAULT: '#43A55A',
+              dark: '#3F5974',
+              light: '#f5f0f4',
+            },
+            brand: {
+              green: '#43A55A',
+              'green-light': '#e8f5ec',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    /* Smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Gradient hero background */
+    .hero-bg {
+      background: linear-gradient(135deg, #faf9fb 0%, #f0ece8 40%, #eaf3ec 100%);
+    }
+
+    /* Subtle card hover lift */
+    .feature-card {
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px -8px rgba(106, 76, 98, 0.12);
+    }
+
+    /* Dot pattern overlay */
+    .dot-pattern {
+      background-image: radial-gradient(circle, #c4b5c0 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* Badge pulse animation */
+    @keyframes pulse-badge {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.6;
+      }
+    }
+
+    .pulse-badge {
+      animation: pulse-badge 2.5s ease-in-out infinite;
+    }
+
+    /* Frosted glass nav */
+    .nav-glass {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Mockup glow */
+    .mockup-glow {
+      filter: drop-shadow(0 24px 60px rgba(67, 165, 90, 0.18)) drop-shadow(0 8px 24px rgba(106, 76, 98, 0.12));
+    }
+
+    /* Why-us card border animation */
+    .why-card {
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .why-card:hover {
+      border-color: #43A55A;
+      box-shadow: 0 0 0 1px #43A55A;
+    }
+
+    /* CTA section wave */
+    .cta-section {
+      background: linear-gradient(135deg, #f0faf2 0%, #e6f5ea 100%);
+    }
+  </style>
 </head>
 
-<body x-data="{ page: 'dashboardMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
-  class="bg-gray-50 text-gray-800">
-  <!-- ===== Preloader Start ===== -->
-  <include src="./partials/preloader.html"></include>
-  <!-- ===== Preloader End ===== -->
+<body class="font-sans antialiased text-slate-800 bg-white">
 
-  <!-- ===== Page Wrapper Start ===== -->
-  <div class="flex h-screen overflow-hidden">
-    <!-- ===== Sidebar Start ===== -->
-    <include src="./partials/sidebar.html"></include>
-    <!-- ===== Sidebar End ===== -->
+  <!-- ===================================================== -->
+  <!-- 1. NAVBAR                                              -->
+  <!-- ===================================================== -->
+  <header id="navbar" class="nav-glass fixed top-0 left-0 right-0 z-50 border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
-    <!-- ===== Content Area Start ===== -->
-    <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
-      <!-- Small Device Overlay Start -->
-      <include src="./partials/overlay.html" />
-      <!-- Small Device Overlay End -->
+      <!-- Logo -->
+      <a href="#" class="flex items-center group">
+        <img src="./images/logo/MooOS-logo.png" alt="Logo MooOS" class="h-10 w-auto object-contain max-w-[150px]" />
+      </a>
 
-      <!-- ===== Header Start ===== -->
-      <include src="./partials/header.html" />
-      <!-- ===== Header End ===== -->
+      <!-- Nav Links (desktop) -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
+        <a href="#fitur" class="text-slate-500 hover:text-slate-800 transition-colors">Fitur</a>
+        <a href="#keunggulan" class="text-slate-500 hover:text-slate-800 transition-colors">Keunggulan</a>
+        <a href="#cta" class="text-slate-500 hover:text-slate-800 transition-colors">Mulai</a>
+      </nav>
 
-      <!-- ===== Main Content Start ===== -->
-      <main>
-        <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-6">
-          
-          <!-- Header -->
-          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Pusat Operasi Koperasi</h1>
-              <p class="text-sm text-gray-500 mt-1">Ringkasan kondisi terkini Koperasi Harapan Baru.</p>
-            </div>
-            <div class="flex items-center gap-2">
-               <span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                 Live Update
-               </span>
-            </div>
-          </div>
-
-          <!-- SMART INSIGHTS SECTION -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="rounded-xl border border-orange-100 bg-orange-50/50 p-4 flex items-start gap-3">
-              <div class="p-2 rounded-lg bg-orange-100 text-orange-600 shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-              </div>
-              <div>
-                <h4 class="text-xs font-bold text-orange-800 uppercase tracking-wide">Peringatan Stok</h4>
-                <p class="text-sm text-orange-700 mt-1 font-medium">Stok pakan diperkirakan habis dalam 8 hari.</p>
-              </div>
-            </div>
-            <div class="rounded-xl border border-blue-100 bg-blue-50/50 p-4 flex items-start gap-3">
-              <div class="p-2 rounded-lg bg-blue-100 text-blue-600 shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-              </div>
-              <div>
-                <h4 class="text-xs font-bold text-blue-800 uppercase tracking-wide">Tren Produksi</h4>
-                <p class="text-sm text-blue-700 mt-1 font-medium">Produksi susu naik 12% dibanding minggu lalu.</p>
-              </div>
-            </div>
-            <div class="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 flex items-start gap-3">
-              <div class="p-2 rounded-lg bg-emerald-100 text-emerald-600 shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              </div>
-              <div>
-                <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wide">Pendapatan</h4>
-                <p class="text-sm text-emerald-700 mt-1 font-medium">Pendapatan meningkat 8% bulan ini.</p>
-              </div>
-            </div>
-            <div class="rounded-xl border border-teal-100 bg-teal-50/50 p-4 flex items-start gap-3">
-              <div class="p-2 rounded-lg bg-teal-100 text-teal-600 shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-              </div>
-              <div>
-                <h4 class="text-xs font-bold text-teal-800 uppercase tracking-wide">Pupuk Organik</h4>
-                <p class="text-sm text-teal-700 mt-1 font-medium">Menyumbang 15% dari total pemasukan bulan ini.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- TOP KPI CARDS -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            <!-- Card 1 -->
-            <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div class="flex items-center justify-between">
-                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-                </div>
-                <span class="flex items-center gap-1 text-sm font-medium text-emerald-500">
-                  2.5% <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                </span>
-              </div>
-              <div class="mt-4">
-                <h4 class="text-2xl font-bold text-slate-800">128 Ekor</h4>
-                <span class="text-sm font-medium text-gray-500">Sapi Perah Aktif</span>
-              </div>
-            </div>
-
-            <!-- Card 2 -->
-            <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div class="flex items-center justify-between">
-                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                </div>
-                <span class="flex items-center gap-1 text-sm font-medium text-rose-500">
-                  15% <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-                </span>
-              </div>
-              <div class="mt-4">
-                <h4 class="text-2xl font-bold text-slate-800">2,300 Kg</h4>
-                <span class="text-sm font-medium text-gray-500">Stok Pakan</span>
-              </div>
-            </div>
-
-            <!-- Card 3 -->
-            <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div class="flex items-center justify-between">
-                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                </div>
-                <span class="flex items-center gap-1 text-sm font-medium text-emerald-500">
-                  8% <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                </span>
-              </div>
-              <div class="mt-4">
-                <h4 class="text-2xl font-bold text-slate-800">220 Liter</h4>
-                <span class="text-sm font-medium text-gray-500">Produksi Susu Hari Ini</span>
-              </div>
-            </div>
-
-            <!-- Card 4 -->
-            <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div class="flex items-center justify-between">
-                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <span class="flex items-center gap-1 text-sm font-medium text-emerald-500">
-                  12% <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                </span>
-              </div>
-              <div class="mt-4">
-                <h4 class="text-2xl font-bold text-slate-800">Rp145.000.000</h4>
-                <span class="text-sm font-medium text-gray-500">Pendapatan Bulan Ini</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- MAIN GRID SECTION -->
-          <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            
-            <!-- LEFT COLUMN (Charts) -->
-            <div class="xl:col-span-8 flex flex-col gap-6">
-              
-              <!-- Feed Analytics -->
-              <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 class="text-lg font-bold text-slate-800">Tren Konsumsi Pakan</h3>
-                    <p class="text-sm text-gray-500">Konsumsi pakan harian selama 7 hari terakhir</p>
-                  </div>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                  <div class="border-l-4 border-amber-500 bg-amber-50 p-3 rounded-r-lg">
-                    <span class="block text-xs font-medium text-amber-700 uppercase">Total Terkonsumsi</span>
-                    <span class="block text-lg font-bold text-amber-900 mt-1">1,420 Kg</span>
-                  </div>
-                  <div class="border-l-4 border-blue-500 bg-blue-50 p-3 rounded-r-lg">
-                    <span class="block text-xs font-medium text-blue-700 uppercase">Rata-rata Harian</span>
-                    <span class="block text-lg font-bold text-blue-900 mt-1">202 Kg</span>
-                  </div>
-                  <div class="border-l-4 border-emerald-500 bg-emerald-50 p-3 rounded-r-lg">
-                    <span class="block text-xs font-medium text-emerald-700 uppercase">Sisa Stok</span>
-                    <span class="block text-lg font-bold text-emerald-900 mt-1">2,300 Kg</span>
-                  </div>
-                </div>
-
-                <div class="rounded-lg bg-red-50 border border-red-100 p-4 mb-6 flex items-start gap-3">
-                  <svg class="w-6 h-6 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                  <div>
-                    <h4 class="text-sm font-bold text-red-800">Stok Pakan Kritis</h4>
-                    <p class="text-sm text-red-700 mt-1">Sisa stok diperkirakan habis dalam 8 hari. Rekomendasi pembelian: <span class="font-bold">1,500 Kg</span>.</p>
-                  </div>
-                </div>
-
-                <div id="chartFeed" class="h-64 w-full"></div>
-              </div>
-
-              <!-- Milk Production Analytics -->
-              <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                <div class="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 class="text-lg font-bold text-slate-800">Tren Produksi Susu</h3>
-                    <p class="text-sm text-gray-500">Produksi susu harian selama 30 hari terakhir</p>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                  <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl text-center">
-                    <span class="block text-xs font-medium text-gray-500 uppercase">Hari Ini</span>
-                    <span class="block text-xl font-bold text-blue-600 mt-1">220 L</span>
-                  </div>
-                  <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl text-center">
-                    <span class="block text-xs font-medium text-gray-500 uppercase">Minggu Ini</span>
-                    <span class="block text-xl font-bold text-blue-600 mt-1">1,480 L</span>
-                  </div>
-                  <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl text-center">
-                    <span class="block text-xs font-medium text-gray-500 uppercase">Bulan Ini</span>
-                    <span class="block text-xl font-bold text-blue-600 mt-1">5,200 L</span>
-                  </div>
-                </div>
-
-                <div id="chartMilk" class="h-64 w-full"></div>
-              </div>
-
-            </div>
-
-            <!-- RIGHT COLUMN -->
-            <div class="xl:col-span-4 flex flex-col gap-6">
-              
-              <!-- System Status -->
-              <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  Status Sistem
-                </h3>
-                <ul class="space-y-3">
-                  <li class="flex items-center justify-between">
-                    <span class="text-sm text-gray-500">Smart Sync Queue</span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online</span>
-                  </li>
-                  <li class="flex items-center justify-between">
-                    <span class="text-sm text-gray-500">Telegram Bot</span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Connected</span>
-                  </li>
-                  <li class="flex items-center justify-between">
-                    <span class="text-sm text-gray-500">Database</span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Healthy</span>
-                  </li>
-                  <li class="flex items-center justify-between">
-                    <span class="text-sm text-gray-500">Sinkronisasi Terakhir</span>
-                    <span class="text-sm font-medium text-slate-800">2 menit lalu</span>
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Quick Actions -->
-              <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h3 class="text-base font-bold text-slate-800 mb-4">Aksi Cepat</h3>
-                <div class="grid grid-cols-2 gap-3">
-                  <button class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-200 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    <span class="text-xs font-bold text-center">Tambah Sapi</span>
-                  </button>
-                  <button class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-200 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <span class="text-xs font-bold text-center">PO Pakan</span>
-                  </button>
-                  <button class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-200 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                    <span class="text-xs font-bold text-center">Catat Susu</span>
-                  </button>
-                  <button class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span class="text-xs font-bold text-center">Buat Laporan</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Revenue Analytics -->
-              <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h3 class="text-base font-bold text-slate-800 mb-4">Analitik Pendapatan</h3>
-                
-                <div id="chartRevenue" class="h-48 w-full mb-4"></div>
-
-                <div class="space-y-2 mb-6">
-                  <div class="flex items-center justify-between text-sm">
-                    <div class="flex items-center gap-2">
-                      <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                      <span class="text-gray-600">Penjualan Susu (70%)</span>
-                    </div>
-                    <span class="font-semibold text-slate-800">Rp101.5M</span>
-                  </div>
-                  <div class="flex items-center justify-between text-sm">
-                    <div class="flex items-center gap-2">
-                      <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                      <span class="text-gray-600">Pupuk Organik (15%)</span>
-                    </div>
-                    <span class="font-semibold text-slate-800">Rp21.75M</span>
-                  </div>
-                  <div class="flex items-center justify-between text-sm">
-                    <div class="flex items-center gap-2">
-                      <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
-                      <span class="text-gray-600">Pendapatan Lain (15%)</span>
-                    </div>
-                    <span class="font-semibold text-slate-800">Rp21.75M</span>
-                  </div>
-                </div>
-
-                <div class="border-t border-gray-100 pt-4 space-y-3">
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-500">Total Pemasukan</span>
-                    <span class="text-sm font-bold text-emerald-600">Rp145.000.000</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-500">Total Pengeluaran</span>
-                    <span class="text-sm font-bold text-red-600">-Rp60.000.000</span>
-                  </div>
-                  <div class="flex items-center justify-between border-t border-dashed border-gray-200 pt-3">
-                    <span class="text-base font-bold text-slate-800">Laba Bersih</span>
-                    <span class="text-base font-bold text-slate-800">Rp85.000.000</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Recent Activities -->
-              <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h3 class="text-base font-bold text-slate-800 mb-4">Aktivitas Terkini</h3>
-                <div class="relative border-l border-gray-200 ml-3 space-y-6">
-                  
-                  <div class="relative pl-6">
-                    <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-500"></span>
-                    <div class="flex items-center justify-between mb-0.5">
-                      <h4 class="text-sm font-bold text-slate-800">Update Stok Pakan</h4>
-                      <span class="text-xs text-gray-400">15:20</span>
-                    </div>
-                    <p class="text-xs text-gray-500">Stok pakan berhasil diupdate dari kandang.</p>
-                  </div>
-                  
-                  <div class="relative pl-6">
-                    <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-blue-500"></span>
-                    <div class="flex items-center justify-between mb-0.5">
-                      <h4 class="text-sm font-bold text-slate-800">Invoice Terbit</h4>
-                      <span class="text-xs text-gray-400">14:00</span>
-                    </div>
-                    <p class="text-xs text-gray-500">Invoice penjualan susu untuk hari ini telah dicetak.</p>
-                  </div>
-                  
-                  <div class="relative pl-6">
-                    <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-amber-500"></span>
-                    <div class="flex items-center justify-between mb-0.5">
-                      <h4 class="text-sm font-bold text-slate-800">PO Diterima</h4>
-                      <span class="text-xs text-gray-400">12:30</span>
-                    </div>
-                    <p class="text-xs text-gray-500">Supplier menerima Purchase Order pakan.</p>
-                  </div>
-                  
-                  <div class="relative pl-6">
-                    <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-indigo-500"></span>
-                    <div class="flex items-center justify-between mb-0.5">
-                      <h4 class="text-sm font-bold text-slate-800">Laporan Susu Masuk</h4>
-                      <span class="text-xs text-gray-400">11:15</span>
-                    </div>
-                    <p class="text-xs text-gray-500">Laporan harian produksi susu berhasil diterima sistem.</p>
-                  </div>
-                  
-                  <div class="relative pl-6">
-                    <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-purple-500"></span>
-                    <div class="flex items-center justify-between mb-0.5">
-                      <h4 class="text-sm font-bold text-slate-800">Laporan Pakan Masuk</h4>
-                      <span class="text-xs text-gray-400">10:45</span>
-                    </div>
-                    <p class="text-xs text-gray-500">Penanggungjawab mengirim laporan sisa pakan.</p>
-                  </div>
-                  
-                  <div class="relative pl-6">
-                    <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white bg-teal-500"></span>
-                    <div class="flex items-center justify-between mb-0.5">
-                      <h4 class="text-sm font-bold text-slate-800">Sapi Baru Ditambahkan</h4>
-                      <span class="text-xs text-gray-400">10:20</span>
-                    </div>
-                    <p class="text-xs text-gray-500">Anggota menambahkan aset ternak sapi perah baru.</p>
-                  </div>
-
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-      </main>
-      <!-- ===== Main Content End ===== -->
-
-      <!-- ApexCharts Script Initialization -->
-      <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-      <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          // 1. Chart Feed
-          const feedOptions = {
-            series: [{
-              name: 'Konsumsi (Kg)',
-              data: [195, 201, 198, 210, 205, 209, 202]
-            }],
-            chart: {
-              type: 'line',
-              height: 250,
-              toolbar: { show: false },
-              fontFamily: 'Inter, sans-serif'
-            },
-            colors: ['#f59e0b'],
-            stroke: {
-              curve: 'smooth',
-              width: 3
-            },
-            xaxis: {
-              categories: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-              labels: { style: { colors: '#64748b' } }
-            },
-            yaxis: {
-              labels: { style: { colors: '#64748b' } }
-            },
-            grid: {
-              borderColor: '#f1f5f9',
-              strokeDashArray: 4
-            },
-            markers: {
-              size: 5,
-              colors: '#fff',
-              strokeColors: '#f59e0b',
-              strokeWidth: 2
-            }
-          };
-          new ApexCharts(document.querySelector("#chartFeed"), feedOptions).render();
-
-          // 2. Chart Milk
-          const milkOptions = {
-            series: [{
-              name: 'Produksi (Liter)',
-              data: [210, 212, 208, 215, 218, 216, 220, 219, 222, 220]
-            }],
-            chart: {
-              type: 'area',
-              height: 250,
-              toolbar: { show: false },
-              fontFamily: 'Inter, sans-serif'
-            },
-            colors: ['#3b82f6'],
-            fill: {
-              type: 'gradient',
-              gradient: {
-                shadeIntensity: 1,
-                opacityFrom: 0.4,
-                opacityTo: 0.05,
-                stops: [0, 90, 100]
-              }
-            },
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2 },
-            xaxis: {
-              categories: ['H-9', 'H-8', 'H-7', 'H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'H-1', 'Hr Ini'],
-              labels: { style: { colors: '#64748b' } }
-            },
-            yaxis: {
-              labels: { style: { colors: '#64748b' } }
-            },
-            grid: {
-              borderColor: '#f1f5f9',
-              strokeDashArray: 4
-            }
-          };
-          new ApexCharts(document.querySelector("#chartMilk"), milkOptions).render();
-
-          // 3. Chart Revenue (Donut)
-          const revOptions = {
-            series: [70, 15, 15],
-            labels: ['Penjualan Susu', 'Pupuk Organik', 'Lainnya'],
-            chart: {
-              type: 'donut',
-              height: 200,
-              fontFamily: 'Inter, sans-serif'
-            },
-            colors: ['#3b82f6', '#10b981', '#6366f1'],
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            plotOptions: {
-              pie: {
-                donut: {
-                  size: '75%',
-                  labels: {
-                    show: true,
-                    name: { show: false },
-                    value: {
-                      show: true,
-                      fontSize: '24px',
-                      fontWeight: 700,
-                      color: '#1e293b'
-                    },
-                    total: {
-                      show: true,
-                      showAlways: true,
-                      label: 'Total',
-                      color: '#64748b',
-                      formatter: function (w) {
-                        return "100%"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          };
-          new ApexCharts(document.querySelector("#chartRevenue"), revOptions).render();
-        });
-      </script>
+      <!-- Right Actions -->
+      <div class="flex items-center gap-4">
+        <a href="./dashboard_MooOS.html"
+          class="inline-flex items-center gap-2 bg-[#43A55A] hover:bg-[#3F5974] text-white text-sm font-bold px-5 py-2.5 rounded-md transition-colors shadow-sm">
+          Try it now
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.625 7H11.375M11.375 7L7.875 3.5M11.375 7L7.875 10.5" stroke="white" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
+      </div>
     </div>
-    <!-- ===== Content Area End ===== -->
-  </div>
-  <!-- ===== Page Wrapper End ===== -->
+  </header>
+
+  <!-- ===================================================== -->
+  <!-- 2. HERO SECTION                                        -->
+  <!-- ===================================================== -->
+  <section class="hero-bg pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden relative">
+    <!-- Decorative dot pattern top-right -->
+    <div class="dot-pattern absolute top-0 right-0 w-80 h-80 opacity-30 pointer-events-none"></div>
+    <div class="dot-pattern absolute bottom-0 left-0 w-64 h-64 opacity-20 pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+        <!-- Left: Copy -->
+        <div class="space-y-7 text-left">
+
+          <!-- Headline -->
+          <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 leading-tight tracking-tight">
+            Kelola Koperasi Peternakan Sapi Anda<br />
+            <span class="text-[#43A55A]">dalam Satu Layar.</span>
+          </h1>
+
+          <!-- Sub-headline -->
+          <p class="text-lg text-gray-500 leading-relaxed max-w-lg">
+            Tingkatkan efisiensi produksi susu, pantau kesehatan ternak, dan optimalkan alokasi pakan dengan sistem
+            manajemen digital yang terintegrasi.
+          </p>
+
+          <!-- CTA Buttons -->
+          <div class="flex flex-wrap items-center gap-4 pt-2">
+            <a href="./dashboard_MooOS.html"
+              class="inline-flex items-center gap-2 bg-[#43A55A] hover:bg-[#3F5974] text-white font-bold px-7 py-3.5 rounded-md shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5">
+              Try it now
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="white" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </a>
+            <a href="#fitur"
+              class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-bold px-7 py-3.5 rounded-md border border-slate-200 shadow-sm transition-all hover:-translate-y-0.5">
+              Pelajari Fitur
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 3V13M8 13L4 9M8 13L12 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </a>
+          </div>
+
+          <!-- Social proof -->
+          <div class="flex items-center gap-4 pt-2">
+            <div class="flex -space-x-2">
+              <div
+                class="w-8 h-8 rounded-full bg-[#43A55A] ring-2 ring-white flex items-center justify-center text-white text-xs font-bold">
+                A</div>
+              <div
+                class="w-8 h-8 rounded-full bg-brand-green ring-2 ring-white flex items-center justify-center text-white text-xs font-bold">
+                B</div>
+              <div
+                class="w-8 h-8 rounded-full bg-amber-500 ring-2 ring-white flex items-center justify-center text-white text-xs font-bold">
+                C</div>
+              <div
+                class="w-8 h-8 rounded-full bg-slate-400 ring-2 ring-white flex items-center justify-center text-white text-xs font-bold">
+                +</div>
+            </div>
+            <p class="text-sm text-slate-500">
+              Dipercaya oleh <span class="font-semibold text-slate-700">50+ koperasi</span> di seluruh Indonesia
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: Dashboard Mockup -->
+        <div class="relative flex justify-center lg:justify-end">
+          <!-- Floating glow blob -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="w-80 h-80 bg-brand-green opacity-10 rounded-full blur-3xl"></div>
+          </div>
+
+          <!-- Mockup Container -->
+          <div
+            class="relative mockup-glow w-full max-w-lg rounded-2xl overflow-hidden border border-slate-200 shadow-2xl">
+            <!-- Browser chrome -->
+            <div class="bg-slate-800 px-4 py-3 flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-red-400"></div>
+              <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+              <div class="w-3 h-3 rounded-full bg-green-400"></div>
+              <div class="ml-4 flex-1 bg-slate-700 rounded-md h-5 flex items-center px-3">
+                <span class="text-slate-400 text-xs">mooos.app/dashboard</span>
+              </div>
+            </div>
+
+            <!-- Simulated Dashboard UI -->
+            <div class="bg-white">
+              <!-- Mini sidebar + content -->
+              <div class="flex">
+                <!-- Sidebar -->
+                <div class="bg-slate-800 w-12 flex-shrink-0 flex flex-col items-center py-4 gap-3">
+                  <div class="w-7 h-7 rounded-md bg-[#43A55A] flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </div>
+                  <div class="w-6 h-1 rounded bg-slate-600"></div>
+                  <div class="w-6 h-6 rounded bg-brand-green opacity-70"></div>
+                  <div class="w-6 h-6 rounded bg-slate-600 opacity-50"></div>
+                  <div class="w-6 h-6 rounded bg-slate-600 opacity-50"></div>
+                  <div class="w-6 h-6 rounded bg-slate-600 opacity-50"></div>
+                </div>
+
+                <!-- Main content -->
+                <div class="flex-1 p-4 space-y-4">
+                  <!-- Header bar -->
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="h-3 w-36 bg-slate-800 rounded font-bold"></div>
+                      <div class="h-2 w-24 bg-slate-300 rounded mt-1.5"></div>
+                    </div>
+                    <div class="h-7 w-20 rounded-md bg-[#43A55A] opacity-80"></div>
+                  </div>
+
+                  <!-- Stat Cards -->
+                  <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                      <div class="h-1.5 w-10 bg-slate-300 rounded mb-2"></div>
+                      <div class="h-4 w-12 bg-slate-800 rounded font-bold"></div>
+                      <div class="h-1.5 w-8 bg-green-400 rounded mt-1.5"></div>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                      <div class="h-1.5 w-10 bg-slate-300 rounded mb-2"></div>
+                      <div class="h-4 w-12 bg-slate-800 rounded font-bold"></div>
+                      <div class="h-1.5 w-8 bg-[#43A55A] rounded mt-1.5 opacity-60"></div>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                      <div class="h-1.5 w-10 bg-slate-300 rounded mb-2"></div>
+                      <div class="h-4 w-12 bg-slate-800 rounded font-bold"></div>
+                      <div class="h-1.5 w-8 bg-amber-400 rounded mt-1.5 opacity-60"></div>
+                    </div>
+                  </div>
+
+                  <!-- Chart mockup -->
+                  <div class="bg-white rounded-lg border border-slate-100 p-3">
+                    <div class="h-2 w-28 bg-slate-700 rounded mb-3"></div>
+                    <!-- SVG line chart -->
+                    <svg viewBox="0 0 280 80" xmlns="http://www.w3.org/2000/svg" class="w-full">
+                      <defs>
+                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="#43A55A" stop-opacity="0.3" />
+                          <stop offset="100%" stop-color="#43A55A" stop-opacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <!-- Grid lines -->
+                      <line x1="0" y1="20" x2="280" y2="20" stroke="#f1f5f9" stroke-width="1" />
+                      <line x1="0" y1="40" x2="280" y2="40" stroke="#f1f5f9" stroke-width="1" />
+                      <line x1="0" y1="60" x2="280" y2="60" stroke="#f1f5f9" stroke-width="1" />
+                      <!-- Area fill -->
+                      <path
+                        d="M0,65 C20,60 40,50 60,45 C80,40 100,42 120,35 C140,28 160,30 180,22 C200,15 220,18 240,12 C260,8 270,10 280,5 L280,80 L0,80 Z"
+                        fill="url(#chartGrad)" />
+                      <!-- Line -->
+                      <path
+                        d="M0,65 C20,60 40,50 60,45 C80,40 100,42 120,35 C140,28 160,30 180,22 C200,15 220,18 240,12 C260,8 270,10 280,5"
+                        stroke="#43A55A" stroke-width="2" fill="none" stroke-linecap="round" />
+                      <!-- Dots -->
+                      <circle cx="60" cy="45" r="3" fill="white" stroke="#43A55A" stroke-width="1.5" />
+                      <circle cx="140" cy="28" r="3" fill="white" stroke="#43A55A" stroke-width="1.5" />
+                      <circle cx="220" cy="18" r="3" fill="white" stroke="#43A55A" stroke-width="1.5" />
+                      <circle cx="280" cy="5" r="3" fill="#43A55A" />
+                    </svg>
+                  </div>
+
+                  <!-- Mini table -->
+                  <div class="bg-white rounded-lg border border-slate-100 p-3">
+                    <div class="h-2 w-20 bg-slate-700 rounded mb-3"></div>
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between">
+                        <div class="h-1.5 w-12 bg-slate-200 rounded"></div>
+                        <div class="h-1.5 w-16 bg-slate-200 rounded"></div>
+                        <div
+                          class="h-4 w-10 bg-green-100 rounded text-green-700 text-[8px] flex items-center justify-center font-medium">
+                          Sehat</div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <div class="h-1.5 w-12 bg-slate-200 rounded"></div>
+                        <div class="h-1.5 w-16 bg-slate-200 rounded"></div>
+                        <div
+                          class="h-4 w-10 bg-amber-100 rounded text-amber-700 text-[8px] flex items-center justify-center font-medium">
+                          Sakit</div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <div class="h-1.5 w-12 bg-slate-200 rounded"></div>
+                        <div class="h-1.5 w-16 bg-slate-200 rounded"></div>
+                        <div
+                          class="h-4 w-10 bg-green-100 rounded text-green-700 text-[8px] flex items-center justify-center font-medium">
+                          Sehat</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating badge cards -->
+          <div
+            class="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg border border-slate-100 px-4 py-3 flex items-center gap-3 hidden lg:flex">
+            <div class="w-8 h-8 rounded-full bg-brand-green flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 13l4 4L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                  stroke-linejoin="round" fill="none" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-800">Sapi Sehat</p>
+              <p class="text-xs text-slate-400">118 / 128 ekor</p>
+            </div>
+          </div>
+
+          <div
+            class="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg border border-slate-100 px-4 py-3 flex items-center gap-3 hidden lg:flex">
+            <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                  stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-800">Harga Pakan Naik</p>
+              <p class="text-xs text-slate-400">Rp 4.445 / kg</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 3. FITUR UTAMA                                         -->
+  <!-- ===================================================== -->
+  <section id="fitur" class="py-20 md:py-28 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+
+      <!-- Section header -->
+      <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+        <span
+          class="inline-block text-xs font-bold uppercase tracking-widest text-[#43A55A] bg-plum-light px-4 py-1.5 rounded-full">
+          Fitur Lengkap
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-800">
+          Fitur Lengkap untuk Peternak Modern
+        </h2>
+        <p class="text-gray-500 text-lg leading-relaxed">
+          Semua yang Anda butuhkan untuk mengelola koperasi peternakan secara digital — dari kandang hingga laporan
+          keuangan.
+        </p>
+      </div>
+
+      <!-- Feature Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <!-- Card 1: Direktori Ternak -->
+        <div class="feature-card bg-white border border-gray-100 shadow-sm p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-plum-light flex items-center justify-center mb-6">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
+                stroke="#43A55A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800 mb-3">Direktori Ternak</h3>
+          <p class="text-gray-500 leading-relaxed text-sm">
+            Pantau status kesehatan, usia, berat, dan riwayat lokasi kandang setiap individu sapi secara detail.
+          </p>
+          <div class="mt-6 pt-6 border-t border-gray-100 flex items-center gap-2 text-sm font-semibold text-[#43A55A]">
+            <span>Lihat fitur</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M10 5l3 3-3 3" stroke="#43A55A" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 2: Manajemen Pakan (Highlighted) -->
+        <div class="feature-card bg-[#43A55A] border border-[#3F5974] shadow-md p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-6">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z"
+                fill="white" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-3">Manajemen Pakan</h3>
+          <p class="text-white/70 leading-relaxed text-sm">
+            Sistem cerdas untuk merekomendasikan order pakan, memantau tren harga pasar, dan melacak stok agar tidak
+            terjadi krisis.
+          </p>
+          <div class="mt-6 pt-6 border-t border-white/20 flex items-center gap-2 text-sm font-semibold text-white/90">
+            <span>Lihat fitur</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M10 5l3 3-3 3" stroke="white" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 3: Tracking Produksi -->
+        <div class="feature-card bg-white border border-gray-100 shadow-sm p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-brand-green-light flex items-center justify-center mb-6">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 3v18h18M18 9l-5 5-3-3-4 4" stroke="#43A55A" stroke-width="1.75" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800 mb-3">Tracking Produksi</h3>
+          <p class="text-gray-500 leading-relaxed text-sm">
+            Catat dan analisis hasil perah susu harian untuk memantau performa hasil ternak Anda dengan grafik yang
+            intuitif.
+          </p>
+          <div
+            class="mt-6 pt-6 border-t border-gray-100 flex items-center gap-2 text-sm font-semibold text-brand-green">
+            <span>Lihat fitur</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M10 5l3 3-3 3" stroke="#43A55A" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 4. KEUNGGULAN SISTEM (Why Choose Us)                   -->
+  <!-- ===================================================== -->
+  <section id="keunggulan" class="py-20 md:py-28 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-6">
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+        <!-- Left: Text copy -->
+        <div class="space-y-6">
+          <span
+            class="inline-block text-xs font-bold uppercase tracking-widest text-brand-green bg-brand-green-light px-4 py-1.5 rounded-full">
+            Keunggulan MooOS
+          </span>
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-800 leading-tight">
+            Lebih dari sekadar catatan, ini adalah sistem kecerdasan koperasi peternakan Anda.
+          </h2>
+          <p class="text-gray-500 text-lg leading-relaxed">
+            MooOS dirancang khusus untuk kebutuhan koperasi peternakan sapi skala menengah di Indonesia, dengan fitur
+            peringatan cerdas yang membantu efisiensi pengeluaran.
+          </p>
+
+          <!-- Why us items -->
+          <div class="space-y-4 pt-2">
+
+            <div class="why-card bg-white rounded-xl border border-gray-200 p-5 flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 mt-0.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                    stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1">Peringatan Harga Pakan Cerdas</h4>
+                <p class="text-sm text-gray-500 leading-relaxed">
+                  Sistem secara otomatis mendeteksi lonjakan harga pakan di atas ambang batas normal dan menampilkan
+                  banner peringatan — mencegah keputusan pembelian impulsif yang merugikan koperasi.
+                </p>
+              </div>
+            </div>
+
+            <div class="why-card bg-white rounded-xl border border-gray-200 p-5 flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-brand-green-light flex items-center justify-center shrink-0 mt-0.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    stroke="#43A55A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1">Analitik Produksi Terintegrasi</h4>
+                <p class="text-sm text-gray-500 leading-relaxed">
+                  Grafik tren harga, riwayat produksi susu, dan laporan kesehatan ternak tersedia dalam satu dasbor —
+                  tidak perlu pindah antar aplikasi.
+                </p>
+              </div>
+            </div>
+
+            <div class="why-card bg-white rounded-xl border border-gray-200 p-5 flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-plum-light flex items-center justify-center shrink-0 mt-0.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#43A55A" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1">Riwayat & Audit Lengkap</h4>
+                <p class="text-sm text-gray-500 leading-relaxed">
+                  Setiap transaksi pakan, perpindahan kandang, dan catatan kesehatan tersimpan dengan timestamp akurat —
+                  siap untuk audit koperasi kapan saja.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right: Stats / visual block -->
+        <div class="space-y-6">
+          <!-- Big stat cards -->
+          <div class="grid grid-cols-2 gap-5">
+            <div class="bg-white rounded-2xl border border-gray-200 p-7 shadow-sm text-center">
+              <div class="text-4xl font-extrabold text-[#43A55A]">128</div>
+              <div class="text-sm text-gray-500 mt-1 font-medium">Ekor Ternak Terpantau</div>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-200 p-7 shadow-sm text-center">
+              <div class="text-4xl font-extrabold text-brand-green">1.240<span class="text-2xl ml-0.5">L</span></div>
+              <div class="text-sm text-gray-500 mt-1 font-medium">Produksi Susu / Hari</div>
+            </div>
+            <div class="bg-[#43A55A] rounded-2xl p-7 shadow-sm text-center">
+              <div class="text-4xl font-extrabold text-white">32<span class="text-2xl ml-0.5">%</span></div>
+              <div class="text-sm text-white/70 mt-1 font-medium">Penghematan Biaya Pakan</div>
+            </div>
+            <div class="bg-brand-green rounded-2xl p-7 shadow-sm text-center">
+              <div class="text-4xl font-extrabold text-white">50<span class="text-2xl ml-0.5">+</span></div>
+              <div class="text-sm text-white/70 mt-1 font-medium">Koperasi Aktif</div>
+            </div>
+          </div>
+
+          <!-- Testimonial card -->
+          <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <div class="flex items-start gap-4">
+              <div
+                class="w-11 h-11 rounded-full bg-[#43A55A] flex items-center justify-center text-white font-bold text-lg shrink-0">
+                S</div>
+              <div>
+                <p class="text-sm text-gray-600 leading-relaxed italic">
+                  "Sejak pakai MooOS, kami berhasil menghindari pembelian pakan saat harga sedang puncaknya. Sistem
+                  peringatannya sangat membantu tim kami."
+                </p>
+                <div class="mt-3">
+                  <p class="text-sm font-bold text-slate-800">Sugeng, Ketua KUD</p>
+                  <p class="text-xs text-gray-400">Koperasi Sapi Makmur, Jawa Tengah</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 5. BOTTOM CTA                                          -->
+  <!-- ===================================================== -->
+  <section id="cta" class="cta-section py-20 md:py-28">
+    <div class="max-w-4xl mx-auto px-6 text-center space-y-8">
+
+      <!-- Logo MooOS -->
+      <div class="flex justify-center">
+        <img src="./images/logo/MooOS-logo.png" alt="Logo MooOS"
+          class="h-14 md:h-16 w-auto object-contain max-w-[200px]" />
+      </div>
+
+      <h2 class="text-3xl md:text-5xl font-extrabold text-slate-800 leading-tight">
+        Siap menuju digitalisasi koperasi ternak?
+      </h2>
+      <p class="text-lg text-gray-500 leading-relaxed max-w-2xl mx-auto">
+        Akses sistem simulasi kami sekarang juga.<br>Langsung coba dasbor demo kami sekarang.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+        <a href="./dashboard_MooOS.html"
+          class="inline-flex items-center gap-2.5 bg-[#43A55A] hover:bg-[#3F5974] text-white font-bold text-base px-8 py-4 rounded-lg shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="5,3 19,12 5,21" fill="white" />
+          </svg>
+          Try it now — Gratis
+        </a>
+        <a href="#fitur"
+          class="inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 font-semibold text-sm transition-colors">
+          Pelajari lebih lanjut
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M10 5l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- Feature bullets -->
+      <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 pt-4">
+        <div class="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8l3 3 7-7" stroke="#43A55A" stroke-width="1.75" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          Tanpa instalasi
+        </div>
+        <div class="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8l3 3 7-7" stroke="#43A55A" stroke-width="1.75" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          Data demo tersedia
+        </div>
+        <div class="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8l3 3 7-7" stroke="#43A55A" stroke-width="1.75" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          Akses penuh semua fitur
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 6. FOOTER                                              -->
+  <!-- ===================================================== -->
+  <footer class="bg-[#042F51] text-emerald-50 py-12">
+    <div class="max-w-7xl mx-auto px-6">
+
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+
+        <!-- Logo + tagline -->
+        <div class="flex flex-col items-center md:items-start gap-2">
+          <img src="./images/logo/MooOS-logo.png" alt="Logo MooOS"
+            class="h-10 w-auto object-contain max-w-[150px] brightness-0 invert" />
+          <p class="text-xs text-emerald-100/90 mt-0.5">Manajemen Koperasi Peternakan Sapi Digital</p>
+        </div>
+
+        <!-- Links -->
+        <div class="flex flex-wrap items-center justify-center gap-6 text-sm">
+          <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+          <a href="#" class="hover:text-white transition-colors">Contact</a>
+          <a href="./dashboard_MooOS.html" class="hover:text-white transition-colors">Dashboard Demo</a>
+        </div>
+      </div>
+
+      <div class="border-t border-emerald-600/30 mt-8 pt-8 text-center text-sm text-emerald-100/70">
+        © 2026 MooOS. All rights reserved.
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Smooth active nav on scroll -->
+  <script>
+    // Sticky nav shadow on scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 10) {
+        navbar.classList.add('shadow-sm');
+      } else {
+        navbar.classList.remove('shadow-sm');
+      }
+    });
+  </script>
+
 </body>
 
 </html>

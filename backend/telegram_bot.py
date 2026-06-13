@@ -1,4 +1,5 @@
 import telebot
+import time
 
 from config import (
     API_TOKEN,
@@ -23,6 +24,20 @@ from telebot.types import (
 
 bot = telebot.TeleBot(API_TOKEN)
 
+# Reference to main.py's BOT_STATUS — set at start_bot() call time
+_bot_status_ref = None
+
+def set_bot_status_ref(status_dict):
+    """Called from main.py to inject the BOT_STATUS dict reference."""
+    global _bot_status_ref
+    _bot_status_ref = status_dict
+
+def _mark_bot_activity():
+    """Update BOT_STATUS timestamp on any activity."""
+    if _bot_status_ref is not None:
+        _bot_status_ref["connected"] = True
+        _bot_status_ref["last_update_ts"] = time.time()
+
 
 # =========================
 # COMMANDS
@@ -30,7 +45,7 @@ bot = telebot.TeleBot(API_TOKEN)
 
 @bot.message_handler(commands=['start'])
 def start(message):
-
+    _mark_bot_activity()
     print("CHAT ID:", message.chat.id)
 
     text = message.text.strip()
@@ -207,10 +222,15 @@ def resend_waiting_confirmations():
 
 
 def start_bot():
-
     print("Bot Running...")
+    if _bot_status_ref is not None:
+        _bot_status_ref["connected"] = True
+        _bot_status_ref["start_ts"] = time.time()
     resend_waiting_confirmations()
     bot.infinity_polling()
+    # If polling exits (e.g. network error), mark as disconnected
+    if _bot_status_ref is not None:
+        _bot_status_ref["connected"] = False
 
 
 # =========================
@@ -374,6 +394,7 @@ Mohon konfirmasi pesanan.
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
+    _mark_bot_activity()
 
     # TERIMA SAPI
     if call.data.startswith("accept_"):
