@@ -149,7 +149,7 @@
                   </div>
                   <!-- Item -->
                   <div class="group p-4 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-indigo-100 transition-colors">
-                    <p class="text-sm font-semibold text-gray-600 group-hover:text-indigo-700 transition-colors">Simpanan Wajib</p>
+                    <p class="text-sm font-semibold text-gray-600 group-hover:text-indigo-700 transition-colors">Simpanan Wajib <span class="text-xs text-gray-400 font-normal">(per sapi/bulan)</span></p>
                     <p class="text-2xl font-bold text-slate-800 mt-1" id="fin-simpanan-wajib">Rp 0</p>
                   </div>
                 </div>
@@ -195,32 +195,114 @@
                     <p class="text-xs text-rose-600 font-medium">Beban &amp; Biaya Operasional</p>
                   </div>
                 </div>
-                <div class="p-5 space-y-4">
-                  <!-- Item -->
+                <div class="p-5 space-y-3">
+                  <!-- Item: Pakan -->
                   <div class="group p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-rose-100 transition-colors flex justify-between items-center">
-                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Beli Pakan Ternak</p>
+                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Biaya Pakan Ternak</p>
                     <p class="text-lg font-bold text-slate-800" id="fin-biaya-pakan">Rp 0</p>
                   </div>
-                  <!-- Item -->
+                  <!-- Item: Gaji Pekerja -->
                   <div class="group p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-rose-100 transition-colors flex justify-between items-center">
-                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Operasional</p>
-                    <p class="text-lg font-bold text-slate-800" id="fin-biaya-ops">Rp 0</p>
+                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Gaji Pekerja <span class="text-xs text-gray-400 font-normal" id="fin-gaji-detail">(5 orang)</span></p>
+                    <p class="text-lg font-bold text-slate-800" id="fin-gaji-pekerja">Rp 0</p>
                   </div>
-                  <!-- Item -->
-                  <div class="group p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-rose-100 transition-colors flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
-                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Gaji Penanggung Jawab Kandang</p>
-                    <p class="text-lg font-bold text-slate-800" id="fin-gaji-pj">Rp 0</p>
+                  <!-- Item: Karung -->
+                  <div class="group p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-rose-100 transition-colors flex justify-between items-center">
+                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Biaya Karung</p>
+                    <p class="text-lg font-bold text-slate-800" id="fin-biaya-karung">Rp 0</p>
                   </div>
-                  <!-- Item -->
-                  <div class="group p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-rose-100 transition-colors flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
-                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Jaminan Kesehatan Ternak</p>
-                    <p class="text-lg font-bold text-slate-800" id="fin-jaminan-kes">Rp 0</p>
+                  <!-- Item: EM4 -->
+                  <div class="group p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-rose-100 transition-colors flex justify-between items-center">
+                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Fermentasi EM4</p>
+                    <p class="text-lg font-bold text-slate-800" id="fin-biaya-em4">Rp 0</p>
+                  </div>
+                  <!-- Item: Distribusi -->
+                  <div class="group p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-rose-100 transition-colors flex justify-between items-center">
+                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Distribusi Susu</p>
+                    <p class="text-lg font-bold text-slate-800" id="fin-biaya-distribusi">Rp 0</p>
+                  </div>
+                  <!-- Item: Utilitas -->
+                  <div class="group p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-white hover:border-rose-100 transition-colors flex justify-between items-center">
+                    <p class="text-sm font-semibold text-gray-600 group-hover:text-rose-700 transition-colors">Utilitas</p>
+                    <p class="text-lg font-bold text-slate-800" id="fin-biaya-utilitas">Rp 0</p>
+                  </div>
+                  <!-- Total -->
+                  <div class="pt-2 mt-2 border-t border-rose-100 flex justify-between items-center">
+                    <p class="text-sm font-bold text-rose-800">Total Pengeluaran</p>
+                    <p class="text-lg font-bold text-rose-700" id="fin-total-pengeluaran">Rp 0</p>
                   </div>
                 </div>
               </div>
             </section>
 
           </div>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- SKEMA BAGI HASIL 60/40                                -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <section aria-labelledby="section-bagi-hasil" class="fade-up">
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden hover:shadow-md transition-shadow">
+              <div class="bg-amber-50 border-b border-amber-100 p-5 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 0 1 0 4H8"/><path d="M12 18V6"/></svg>
+                </div>
+                <div>
+                  <h2 id="section-bagi-hasil" class="text-lg font-bold text-amber-900 tracking-tight">Skema Bagi Hasil</h2>
+                  <p class="text-xs text-amber-600 font-medium">60% Koperasi — 40% Pemilik Sapi</p>
+                </div>
+              </div>
+              <div class="p-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- Kolom Koperasi -->
+                  <div class="space-y-3">
+                    <h3 class="text-sm font-bold text-emerald-700 flex items-center gap-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                      Bagian Koperasi (60%)
+                    </h3>
+                    <div class="p-3 rounded-xl bg-emerald-50/50 border border-emerald-100 flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Dari Susu</span>
+                      <span class="font-bold text-emerald-700" id="bh-koperasi-susu">Rp 0</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-emerald-50/50 border border-emerald-100 flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Dari Pupuk</span>
+                      <span class="font-bold text-emerald-700" id="bh-koperasi-pupuk">Rp 0</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-emerald-50/50 border border-emerald-100 flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Simpanan Wajib</span>
+                      <span class="font-bold text-emerald-700" id="bh-simpanan-wajib">Rp 0</span>
+                    </div>
+                    <div class="pt-2 mt-1 border-t border-emerald-200 flex justify-between items-center">
+                      <span class="text-sm font-bold text-emerald-800">Total Pendapatan Koperasi</span>
+                      <span class="text-lg font-bold text-emerald-700" id="bh-total-koperasi">Rp 0</span>
+                    </div>
+                  </div>
+                  <!-- Kolom Pemilik -->
+                  <div class="space-y-3">
+                    <h3 class="text-sm font-bold text-blue-700 flex items-center gap-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                      Bagian Pemilik Sapi (40%)
+                    </h3>
+                    <div class="p-3 rounded-xl bg-blue-50/50 border border-blue-100 flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Dari Susu</span>
+                      <span class="font-bold text-blue-700" id="bh-pemilik-susu">Rp 0</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-blue-50/50 border border-blue-100 flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Dari Pupuk</span>
+                      <span class="font-bold text-blue-700" id="bh-pemilik-pupuk">Rp 0</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-blue-50/50 border border-blue-100 flex justify-between items-center">
+                      <span class="text-sm text-gray-600">Dikurangi Simpanan Wajib</span>
+                      <span class="font-bold text-red-500" id="bh-potong-wajib">-Rp 0</span>
+                    </div>
+                    <div class="pt-2 mt-1 border-t border-blue-200 flex justify-between items-center">
+                      <span class="text-sm font-bold text-blue-800">Net Pemilik per Sapi/Bulan</span>
+                      <span class="text-lg font-bold text-blue-700" id="bh-net-pemilik">Rp 0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
           <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
           <!-- 6. DOWNLOAD REPORTS                                   -->
@@ -463,15 +545,8 @@
       const simpananPokok = report ? report.operational.simpanan_pokok_total : 0;
       const simpananWajib = report ? report.operational.simpanan_wajib_total : 0;
 
-      const revenueSusu   = report?.summary?.real_milk_revenue ?? (report?.milk?.estimated_revenue_today * 30) ?? 14100000;
-      const revenuePupuk  = report?.summary?.real_waste_revenue ?? (report?.waste?.total_ready_kg * report?.waste?.current_price_per_kg) ?? 2500000;
-      const totalRevenue  = revenueSusu + revenuePupuk;
-      
-      const expensePakan  = report?.summary?.real_feed_cost ?? (report?.feed?.daily_feed_cost * 30) ?? 2375000;
-      const expenseOps    = report?.summary?.real_ops_cost ?? report?.operational?.operasional_lain ?? 500000;
-      const gajiPj        = report ? report.operational.gaji_pj_kandang : 0;
-      const jaminanKes    = report ? report.operational.jaminan_kesehatan : 0;
-      const totalExpense  = expensePakan + expenseOps + gajiPj + jaminanKes;
+      const revenueSusu   = report?.summary?.real_milk_revenue ?? 0;
+      const revenuePupuk  = report?.summary?.real_waste_revenue ?? 0;
 
       // Keanggotaan
       document.getElementById('fin-simpanan-pokok').textContent = fmt(simpananPokok);
@@ -481,15 +556,39 @@
       document.getElementById('fin-jual-susu').textContent = fmt(revenueSusu);
       document.getElementById('fin-jual-pupuk').textContent = fmt(revenuePupuk);
 
-      // Pengeluaran
-      document.getElementById('fin-biaya-pakan').textContent = fmt(expensePakan);
-      document.getElementById('fin-biaya-ops').textContent = fmt(expenseOps);
-      document.getElementById('fin-gaji-pj').textContent = fmt(gajiPj);
-      document.getElementById('fin-jaminan-kes').textContent = fmt(jaminanKes);
+      // Pengeluaran detail
+      const ops = report?.operational ?? {};
+      document.getElementById('fin-biaya-pakan').textContent = fmt(ops.biaya_pakan ?? 0);
+      document.getElementById('fin-gaji-pekerja').textContent = fmt(ops.gaji_pekerja ?? 0);
+      document.getElementById('fin-gaji-detail').textContent = `(${ops.config?.jumlah_pekerja ?? 5} orang)`;
+      document.getElementById('fin-biaya-karung').textContent = fmt(ops.biaya_karung ?? 0);
+      document.getElementById('fin-biaya-em4').textContent = fmt(ops.biaya_em4 ?? 0);
+      document.getElementById('fin-biaya-distribusi').textContent = fmt(ops.biaya_distribusi ?? 0);
+      document.getElementById('fin-biaya-utilitas').textContent = fmt(ops.biaya_utilitas ?? 0);
+      document.getElementById('fin-total-pengeluaran').textContent = fmt(ops.total_biaya_ops ?? 0);
 
-      // Net profit
-      const netProfit = report ? report.summary.net_profit_estimasi : (totalRevenue - totalExpense);
+      // Bagi Hasil 60/40
+      const bh = report?.bagi_hasil ?? {};
+      document.getElementById('bh-koperasi-susu').textContent = fmt(bh.bagian_koperasi_susu ?? 0);
+      document.getElementById('bh-koperasi-pupuk').textContent = fmt(bh.bagian_koperasi_pupuk ?? 0);
+      document.getElementById('bh-simpanan-wajib').textContent = fmt(simpananWajib);
+      document.getElementById('bh-total-koperasi').textContent = fmt(report?.summary?.total_pendapatan_koperasi ?? 0);
+
+      document.getElementById('bh-pemilik-susu').textContent = fmt(bh.bagian_pemilik_susu ?? 0);
+      document.getElementById('bh-pemilik-pupuk').textContent = fmt(bh.bagian_pemilik_pupuk ?? 0);
+      const swPerSapi = ops.config?.simpanan_wajib_per_sapi ?? 200000;
+      document.getElementById('bh-potong-wajib').textContent = `-${fmt(swPerSapi)}`;
+      document.getElementById('bh-net-pemilik').textContent = fmt(bh.net_pemilik_per_sapi ?? 0);
+
+      // Net profit = laba koperasi
+      const netProfit = report?.summary?.laba_koperasi ?? 0;
       document.getElementById('fin-net-profit').textContent = fmt(netProfit);
+
+      // Update status badge
+      const statusEl = document.querySelector('#section-net-profit ~ div .font-semibold');
+      if (statusEl) {
+        statusEl.textContent = netProfit >= 0 ? 'Positif \u2022 Sehat' : 'Negatif \u2022 Perlu Evaluasi';
+      }
     }
 
     // ── Download Reports ──────────────────────────────────────────

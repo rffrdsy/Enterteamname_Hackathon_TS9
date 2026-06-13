@@ -15,7 +15,7 @@ from fastapi.responses import Response, FileResponse
 from pydantic import BaseModel
 from typing import Optional
 from database import conn, db_lock, db_fetch_all, db_fetch_one, db_execute
-from financials import FeedMRP, MilkMRP, WasteMRP, OperationalMRP, get_aggregate_report
+from financials import FeedMRP, MilkMRP, WasteMRP, OperationalMRP, get_aggregate_report, get_koperasi_config
 
 from telegram_bot import (
     start_bot,
@@ -773,6 +773,28 @@ def download_report_pdf(report_type: str, period: str = "all"):
 def collect_waste_daily():
     WasteMRP.collect_daily_waste()
     return {"status": "success", "message": "Daily waste collected."}
+
+@app.get("/api/config")
+def get_config():
+    """Get all koperasi configuration values."""
+    rows = db_fetch_all("SELECT key, value, label FROM koperasi_config")
+    return [
+        {"key": r[0], "value": r[1], "label": r[2]}
+        for r in rows
+    ]
+
+@app.put("/api/config")
+async def update_config(updates: dict):
+    """Update one or more koperasi config values. Body: {"key1": value1, "key2": value2}"""
+    valid_keys = [r[0] for r in db_fetch_all("SELECT key FROM koperasi_config")]
+    updated = []
+    for key, value in updates.items():
+        if key in valid_keys:
+            db_execute("UPDATE koperasi_config SET value = ? WHERE key = ?", (float(value), key))
+            updated.append(key)
+    if not updated:
+        raise HTTPException(status_code=400, detail="No valid config keys provided")
+    return {"status": "success", "updated": updated}
 
 @app.on_event("startup")
 async def startup_event():
