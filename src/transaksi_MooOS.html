@@ -10,6 +10,7 @@
   <title>Transaksi Keuangan | MooOS - Manajemen Ternak</title>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="./js/toast.js" defer></script>
 </head>
 
 <body x-data="{ page: 'transaksiMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
@@ -671,7 +672,7 @@
     // ── Export CSV ───────────────────────────────────────────────────
     function exportCSV() {
       if (allTransaksi.length === 0) {
-        alert('Tidak ada data untuk diekspor.');
+        if(typeof showToast==='function') showToast('Tidak ada data untuk diekspor.', 'warning'); return;
         return;
       }
       const header = ['ID Transaksi', 'Jenis', 'Keterangan', 'Nominal (Rp)', 'Status'];

@@ -1,21 +1,38 @@
-import sqlite3
-import threading
-import os
-
-_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mooos.db")
-
-conn = sqlite3.connect(
-    _DB_PATH,
-    check_same_thread=False
+"""
+Database initialization, seeding, and legacy helpers.
+Uses SQLAlchemy ORM from models.py.
+"""
+import datetime
+import random
+from models import (
+    Base, engine, Session, get_session,
+    Member, Cow, FeedOrder, FeedOrderRecipient, MessageRef,
+    KoperasiConfig, FeedFinancial, MilkFinancial,
+    WasteFinancial, WasteProcessing, OperationalTransaction,
+    FeedPriceHistory, DailyKandangLog,
 )
 
-# Thread lock to prevent SQLite cursor conflicts between
-# the Telegram bot daemon thread and FastAPI request threads
+# ──────────────────────────────────────────────────────────────
+# CREATE ALL TABLES
+# ──────────────────────────────────────────────────────────────
+Base.metadata.create_all(engine)
+
+# ──────────────────────────────────────────────────────────────
+# LEGACY HELPERS (for backward compat during transition)
+# These wrap ORM sessions so old code that calls db_fetch_all()
+# still works without changes.
+# ──────────────────────────────────────────────────────────────
+import threading
 db_lock = threading.Lock()
+
+# Keep a raw connection for any code that still needs it
+import sqlite3, os
+_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mooos.db")
+conn = sqlite3.connect(_DB_PATH, check_same_thread=False)
 
 
 def db_fetch_all(sql: str, params: tuple = ()):
-    """Thread-safe fetchall helper — uses a fresh cursor per call."""
+    """Thread-safe fetchall helper — raw SQL."""
     with db_lock:
         cur = conn.cursor()
         cur.execute(sql, params)
@@ -23,7 +40,7 @@ def db_fetch_all(sql: str, params: tuple = ()):
 
 
 def db_fetch_one(sql: str, params: tuple = ()):
-    """Thread-safe fetchone helper — uses a fresh cursor per call."""
+    """Thread-safe fetchone helper — raw SQL."""
     with db_lock:
         cur = conn.cursor()
         cur.execute(sql, params)
@@ -31,177 +48,30 @@ def db_fetch_one(sql: str, params: tuple = ()):
 
 
 def db_execute(sql: str, params: tuple = ()):
-    """Thread-safe execute + commit helper — uses a fresh cursor per call."""
+    """Thread-safe execute + commit helper — raw SQL."""
     with db_lock:
         cur = conn.cursor()
         cur.execute(sql, params)
         conn.commit()
         return cur.lastrowid
 
-cursor = conn.cursor()
 
-# ==========================================
-# CORE TABLES
-# ==========================================
+# ──────────────────────────────────────────────────────────────
+# SEED: KOPERASI CONFIG
+# ──────────────────────────────────────────────────────────────
+session = get_session()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS members (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    nik TEXT,
-    phone TEXT,
-    alamat TEXT,
-    role TEXT DEFAULT 'Penitip Ternak'
-)
-""")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS cows (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cow_code TEXT UNIQUE,
-    owner_id INTEGER,
-    weight REAL,
-    status TEXT,
-    caretaker TEXT,
-    feed_qty_needed REAL DEFAULT 0,
-    barn TEXT,
-    hash_id TEXT,
-
-    FOREIGN KEY(owner_id)
-    REFERENCES members(id)
-)
-""")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS feed_orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    po_code TEXT,
-    qty REAL,
-    price_per_kg REAL DEFAULT 5000,
-    status TEXT,
-    supplier TEXT
-)
-""")
-
-# Tabel untuk mencatat supplier mana saja yang menerima notifikasi PO
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS feed_order_recipients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    po_code TEXT,
-    telegram_id INTEGER
-)
-""")
-
-# Tabel untuk menyimpan referensi pesan agar tombol bisa dihapus setelah di-approve
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS message_refs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ref_type TEXT,
-    ref_id TEXT,
-    chat_id INTEGER,
-    message_id INTEGER
-)
-""")
-
-
-# ==========================================
-# COLUMN MIGRATIONS (backward compat)
-# ==========================================
-
-cursor.execute("PRAGMA table_info(cows)")
-cows_cols = [row[1] for row in cursor.fetchall()]
-if "feed_qty_needed" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN feed_qty_needed REAL DEFAULT 0")
-if "barn" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN barn TEXT")
-if "hash_id" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN hash_id TEXT")
-if "jenis" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN jenis TEXT")
-if "umur" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN umur TEXT")
-if "tgl_masuk" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN tgl_masuk TEXT")
-if "deskripsi" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN deskripsi TEXT")
-if "foto_path" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN foto_path TEXT")
-if "lactate_status" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN lactate_status TEXT DEFAULT 'Kering'")
-if "litre_milked_today" not in cows_cols:
-    cursor.execute("ALTER TABLE cows ADD COLUMN litre_milked_today REAL DEFAULT 0.0")
-
-cursor.execute("PRAGMA table_info(feed_orders)")
-fo_cols = [row[1] for row in cursor.fetchall()]
-if "price_per_kg" not in fo_cols:
-    cursor.execute("ALTER TABLE feed_orders ADD COLUMN price_per_kg REAL DEFAULT 5000")
-if "supplier" not in fo_cols:
-    cursor.execute("ALTER TABLE feed_orders ADD COLUMN supplier TEXT")
-
-# Migrasi kolom members jika tabel sudah ada sebelumnya
-cursor.execute("PRAGMA table_info(members)")
-members_cols = [row[1] for row in cursor.fetchall()]
-if "nik" not in members_cols:
-    cursor.execute("ALTER TABLE members ADD COLUMN nik TEXT")
-if "alamat" not in members_cols:
-    cursor.execute("ALTER TABLE members ADD COLUMN alamat TEXT")
-if "role" not in members_cols:
-    cursor.execute("ALTER TABLE members ADD COLUMN role TEXT DEFAULT 'Penitip Ternak'")
-if "barn" not in members_cols:
-    cursor.execute("ALTER TABLE members ADD COLUMN barn TEXT")
-if "iuran_wajib" not in members_cols:
-    cursor.execute("ALTER TABLE members ADD COLUMN iuran_wajib REAL DEFAULT 200000.0")
-if "iuran_pokok" not in members_cols:
-    cursor.execute("ALTER TABLE members ADD COLUMN iuran_pokok REAL DEFAULT 1500000.0")
-    # Seed barn assignment: Penanggungjawab pertama → A, kedua → B
-    cursor.execute("""
-        UPDATE members SET barn = 'A'
-        WHERE role = 'Penanggungjawab Ternak'
-        AND id = (
-            SELECT id FROM members WHERE role = 'Penanggungjawab Ternak'
-            ORDER BY id ASC LIMIT 1
-        )
-    """)
-    cursor.execute("""
-        UPDATE members SET barn = 'B'
-        WHERE role = 'Penanggungjawab Ternak'
-        AND id = (
-            SELECT id FROM members WHERE role = 'Penanggungjawab Ternak'
-            ORDER BY id ASC LIMIT 1 OFFSET 1
-        )
-    """)
-
-
-# ==========================================
-# KOPERASI CONFIG TABLE (admin-editable)
-# ==========================================
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS koperasi_config (
-    key TEXT PRIMARY KEY,
-    value REAL,
-    label TEXT
-)
-""")
-
-# Seed default config if empty
-cursor.execute("SELECT COUNT(*) FROM koperasi_config")
-if cursor.fetchone()[0] == 0:
+if session.query(KoperasiConfig).count() == 0:
     defaults = [
-        # Bagi hasil
-        ("bagi_hasil_koperasi",   0.6,       "Persentase Bagi Hasil Koperasi"),
-        ("bagi_hasil_pemilik",    0.4,       "Persentase Bagi Hasil Pemilik"),
-        # Harga produk
-        ("harga_susu_per_liter",  6500.0,    "Harga Susu per Liter (Rp)"),
-        ("harga_pupuk_per_kg",    5000.0,    "Harga Pupuk per Kg (Rp)"),
-        # Produksi per sapi per hari
-        ("produksi_susu_per_hari", 15.0,     "Produksi Susu per Sapi per Hari (liter)"),
-        ("produksi_limbah_per_hari", 10.0,   "Produksi Limbah Segar per Sapi per Hari (kg)"),
-        ("rasio_fermentasi",       0.6,      "Rasio Fermentasi (segar → pupuk jadi)"),
-        # Iuran anggota
+        ("bagi_hasil_koperasi",    0.6,       "Persentase Bagi Hasil Koperasi"),
+        ("bagi_hasil_pemilik",     0.4,       "Persentase Bagi Hasil Pemilik"),
+        ("harga_susu_per_liter",   6500.0,    "Harga Susu per Liter (Rp)"),
+        ("harga_pupuk_per_kg",     5000.0,    "Harga Pupuk per Kg (Rp)"),
+        ("produksi_susu_per_hari", 15.0,      "Produksi Susu per Sapi per Hari (liter)"),
+        ("produksi_limbah_per_hari", 10.0,    "Produksi Limbah Segar per Sapi per Hari (kg)"),
+        ("rasio_fermentasi",       0.6,       "Rasio Fermentasi (segar → pupuk jadi)"),
         ("simpanan_pokok",         1500000.0, "Simpanan Pokok per Anggota (Rp, sekali seumur hidup)"),
         ("simpanan_wajib_per_sapi", 200000.0, "Simpanan Wajib per Sapi per Bulan (Rp)"),
-        # Biaya operasional
         ("pakan_per_sapi",         750000.0,  "Biaya Pakan per Sapi per Bulan (Rp)"),
         ("jumlah_pekerja",         5.0,       "Jumlah Pekerja (2 Kandang A + 2 Kandang B + 1 Admin)"),
         ("gaji_per_pekerja",       3800000.0, "Gaji per Pekerja per Bulan (Rp)"),
@@ -211,170 +81,157 @@ if cursor.fetchone()[0] == 0:
         ("biaya_utilitas",         500000.0,  "Biaya Utilitas per Bulan (Rp)"),
     ]
     for key, value, label in defaults:
-        cursor.execute(
-            "INSERT INTO koperasi_config (key, value, label) VALUES (?, ?, ?)",
-            (key, value, label)
-        )
+        session.add(KoperasiConfig(key=key, value=value, label=label))
+    session.commit()
 
 
-# ==========================================
-# FINANCIAL TABLES
-# ==========================================
+# ──────────────────────────────────────────────────────────────
+# SEED: MEMBERS (20 penitip + 2 penanggungjawab)
+# ──────────────────────────────────────────────────────────────
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS feed_financials (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT UNIQUE,
-    total_kg REAL,
-    price_per_kg REAL,
-    estimated_cost REAL
-)
-""")
+if session.query(Member).count() == 0:
+    penitip_names = [
+        "Ahmad Sudirman", "Budi Santoso", "Cahyo Wibowo", "Dedi Kurniawan",
+        "Eko Prasetyo", "Fajar Hidayat", "Gunawan Setiawan", "Hadi Purnomo",
+        "Irwan Saputra", "Joko Susilo", "Kartono Wijaya", "Lukman Hakim",
+        "Mulyono Haryanto", "Narto Sugiarto", "Oka Permana", "Prayitno Utomo",
+        "Qomar Ridwan", "Rudi Hartono", "Slamet Raharjo", "Taufik Ismail",
+    ]
+    for i, name in enumerate(penitip_names, start=1):
+        session.add(Member(
+            name=name,
+            nik=f"33050219{70+i:02d}0101{i:04d}",
+            phone=f"08{random.randint(1000000000, 9999999999)}",
+            alamat=f"Desa Harapan RT {random.randint(1,10):02d}/RW {random.randint(1,5):02d}",
+            role="Penitip Ternak",
+            iuran_pokok=1500000.0,
+            iuran_wajib=200000.0,
+        ))
 
-# Migrasi kolom estimated_cost jika tabel sudah lama
-cursor.execute("PRAGMA table_info(feed_financials)")
-ff_cols = [row[1] for row in cursor.fetchall()]
-if "estimated_cost" not in ff_cols:
-    cursor.execute("ALTER TABLE feed_financials ADD COLUMN estimated_cost REAL")
-    if "estimated_expense" in ff_cols:
-        cursor.execute("UPDATE feed_financials SET estimated_cost = estimated_expense")
+    # 2 Penanggungjawab (sesuai config: 2 kandang A + 2 kandang B, tapi PJ hanya 2)
+    session.add(Member(
+        name="Abyasa (PJ Kandang A)", nik="3305021990010121",
+        phone="081234567890", alamat="Kantor Koperasi",
+        role="Penanggungjawab Ternak", barn="A",
+        iuran_pokok=1500000.0, iuran_wajib=0.0,
+    ))
+    session.add(Member(
+        name="Axel (PJ Kandang B)", nik="3305021991010122",
+        phone="081234567891", alamat="Kantor Koperasi",
+        role="Penanggungjawab Ternak", barn="B",
+        iuran_pokok=1500000.0, iuran_wajib=0.0,
+    ))
+    session.commit()
 
-# Inject dummy data for feed_financials (sesuai model bisnis: 30 sapi × Rp 750.000/bulan)
-cursor.execute("SELECT COUNT(*) FROM feed_financials")
-feed_count = cursor.fetchone()[0]
-if feed_count == 0:
-    import datetime as _dt2
-    import random as _rand2
-    _today2 = _dt2.date.today()
-    # 30 sapi × ~25kg pakan/hari = ~750 kg/hari, biaya = 750.000/sapi/bulan ÷ 30 = 25.000/sapi/hari
-    # Harga pakan ~Rp 1.000/kg → 750kg × Rp 1.000 = Rp 750.000/hari
-    for _i in range(30, 0, -1):
-        _d = _today2 - _dt2.timedelta(days=_i)
-        _kg = round(_rand2.uniform(700, 800), 1)   # ~750 kg/hari total (30 sapi)
-        _price = round(_rand2.uniform(950, 1050), 0) # ~Rp 1.000/kg
-        _cost = _kg * _price
-        cursor.execute(
-            "INSERT INTO feed_financials (date, total_kg, price_per_kg, estimated_cost) VALUES (?, ?, ?, ?)",
-            (_d.strftime("%Y-%m-%d"), _kg, _price, _cost)
-        )
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS milk_financials (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT UNIQUE,
-    total_liters REAL,
-    price_per_liter REAL,
-    estimated_revenue REAL
-)
-""")
+# ──────────────────────────────────────────────────────────────
+# SEED: COWS (30 ekor, distributed across 20 owners)
+# ──────────────────────────────────────────────────────────────
+today = datetime.date.today()
 
-# Inject dummy data for milk_financials (30 sapi × 15 liter/hari × Rp 6.500)
-cursor.execute("SELECT COUNT(*) FROM milk_financials")
-count = cursor.fetchone()[0]
-if count == 0:
-    import datetime
-    import random
-    today = datetime.date.today()
+if session.query(Cow).count() == 0:
+    import uuid as _uuid
+    penitip_ids = [m.id for m in session.query(Member).filter_by(role="Penitip Ternak").all()]
+
+    jenis_options = ["Perah", "Pedaging", "Perah"]
+    barns = ["A", "B"]
+    cow_index = 0
+
+    for i in range(30):
+        owner_id = penitip_ids[i % len(penitip_ids)]
+        barn = barns[i % 2]
+        jenis = jenis_options[i % 3]
+        cow_code = f"S{i+1:03d}"
+        hash_id = _uuid.uuid4().hex[:8]
+
+        session.add(Cow(
+            cow_code=cow_code,
+            owner_id=owner_id,
+            weight=round(random.uniform(350, 550), 1),
+            status="AVAILABLE",
+            caretaker="ABYASA" if barn == "A" else "AXEL",
+            barn=barn,
+            hash_id=hash_id,
+            jenis=jenis,
+            umur=f"{random.randint(2,8)} tahun",
+            tgl_masuk=(today - datetime.timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"),
+            lactate_status="Laktasi" if jenis == "Perah" else "Kering",
+            litre_milked_today=round(random.uniform(12, 18), 1) if jenis == "Perah" else 0.0,
+        ))
+    session.commit()
+
+
+# ──────────────────────────────────────────────────────────────
+# SEED: DUMMY FINANCIAL DATA (30 days)
+# ──────────────────────────────────────────────────────────────
+today = datetime.date.today()
+
+# Feed financials
+if session.query(FeedFinancial).count() == 0:
     for i in range(30, 0, -1):
         d = today - datetime.timedelta(days=i)
-        # 30 sapi × 15 liter = 450 liter/hari ± variasi
+        kg = round(random.uniform(700, 800), 1)
+        price = round(random.uniform(950, 1050), 0)
+        session.add(FeedFinancial(
+            date=d.strftime("%Y-%m-%d"),
+            total_kg=kg,
+            price_per_kg=price,
+            estimated_cost=kg * price,
+        ))
+    session.commit()
+
+# Milk financials
+if session.query(MilkFinancial).count() == 0:
+    for i in range(30, 0, -1):
+        d = today - datetime.timedelta(days=i)
         liters = round(random.uniform(420, 480), 1)
         price = 6500.0
-        revenue = liters * price
-        cursor.execute(
-            "INSERT INTO milk_financials (date, total_liters, price_per_liter, estimated_revenue) VALUES (?, ?, ?, ?)",
-            (d.strftime("%Y-%m-%d"), liters, price, revenue)
-        )
+        session.add(MilkFinancial(
+            date=d.strftime("%Y-%m-%d"),
+            total_liters=liters,
+            price_per_liter=price,
+            estimated_revenue=liters * price,
+        ))
+    session.commit()
 
-# ==========================================
-# WASTE & FERTILIZER TABLES
-# ==========================================
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS waste_financials (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT UNIQUE,
-    total_kg_fertilizer REAL,
-    price_per_kg REAL,
-    estimated_revenue REAL
-)
-""")
-
-# Inject dummy data for waste_financials
-# 30 sapi × 10 kg segar/hari = 300 kg segar → 180 kg pupuk/hari (rasio 0.6)
-# Harga Rp 5.000/kg → revenue = 180 × 5.000 = 900.000/hari
-cursor.execute("SELECT COUNT(*) FROM waste_financials")
-if cursor.fetchone()[0] == 0:
-    import datetime
-    import random
-    today = datetime.date.today()
+# Waste financials
+if session.query(WasteFinancial).count() == 0:
     for i in range(30, 0, -1):
         d = today - datetime.timedelta(days=i)
-        # Pupuk jadi setelah fermentasi: ~180 kg/hari ± variasi
         fertilizer = round(random.uniform(160, 200), 1)
         price = 5000.0
-        revenue = fertilizer * price
-        cursor.execute(
-            "INSERT INTO waste_financials (date, total_kg_fertilizer, price_per_kg, estimated_revenue) VALUES (?, ?, ?, ?)",
-            (d.strftime("%Y-%m-%d"), fertilizer, price, revenue)
-        )
+        session.add(WasteFinancial(
+            date=d.strftime("%Y-%m-%d"),
+            total_kg_fertilizer=fertilizer,
+            price_per_kg=price,
+            estimated_revenue=fertilizer * price,
+        ))
+    session.commit()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS waste_processing (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date_collected TEXT,
-    kg_amount REAL,
-    status TEXT,
-    ready_date TEXT
-)
-""")
-
-# Inject dummy active batches for waste_processing
-cursor.execute("SELECT COUNT(*) FROM waste_processing")
-if cursor.fetchone()[0] == 0:
-    import datetime
-    today = datetime.date.today()
+# Waste processing batches
+if session.query(WasteProcessing).count() == 0:
     for i in range(1, 15, 3):
         d_collected = today - datetime.timedelta(days=i)
         d_ready = d_collected + datetime.timedelta(days=14)
         status = "FERMENTING" if d_ready > today else "READY"
-        # 30 sapi × 10 kg/hari = 300 kg segar per batch
-        cursor.execute(
-            "INSERT INTO waste_processing (date_collected, kg_amount, status, ready_date) VALUES (?, ?, ?, ?)",
-            (d_collected.strftime("%Y-%m-%d"), 300.0, status, d_ready.strftime("%Y-%m-%d"))
-        )
+        session.add(WasteProcessing(
+            date_collected=d_collected.strftime("%Y-%m-%d"),
+            kg_amount=300.0,
+            status=status,
+            ready_date=d_ready.strftime("%Y-%m-%d"),
+        ))
+    session.commit()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS operational_transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT,
-    category TEXT,
-    description TEXT,
-    amount REAL,
-    type TEXT
-)
-""")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS feed_price_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT UNIQUE,
-    price_per_kg REAL
-)
-""")
-
-# Inject dummy historical data for feed_price_history
-cursor.execute("SELECT COUNT(*) FROM feed_price_history")
-if cursor.fetchone()[0] == 0:
-    import datetime
-    import random
-    today = datetime.date.today()
+# Feed price history
+if session.query(FeedPriceHistory).count() == 0:
     for i in range(30, 0, -1):
         d = today - datetime.timedelta(days=i)
         price = round(random.uniform(950, 1100), 0)
-        cursor.execute(
-            "INSERT INTO feed_price_history (date, price_per_kg) VALUES (?, ?)",
-            (d.strftime("%Y-%m-%d"), price)
-        )
+        session.add(FeedPriceHistory(
+            date=d.strftime("%Y-%m-%d"),
+            price_per_kg=price,
+        ))
+    session.commit()
 
-conn.commit()
+# Close seed session
+Session.remove()

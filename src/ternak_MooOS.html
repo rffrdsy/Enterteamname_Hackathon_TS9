@@ -7,6 +7,7 @@
     content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Ternak | MooOS - Manajemen Ternak</title>
+  <script src="./js/toast.js" defer></script>
 </head>
 
 <body x-data="{ page: 'ternakMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
@@ -58,15 +59,13 @@
               class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 p-5 bg-white">
               <h2 class="text-base font-semibold text-slate-800">Direktori Ternak</h2>
               <div class="flex items-center gap-3">
-                <button
-                  class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                <div class="relative">
+                  <input type="text" id="search-ternak" placeholder="Cari ternak..." class="rounded-lg border border-gray-200 bg-white px-3.5 py-2 pl-9 text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-colors w-48 sm:w-64" />
+                  <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/>
                   </svg>
-                  <span>Filter</span>
-                </button>
-                <button
+                </div>
+                <button onclick="exportCSV()"
                   class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -267,6 +266,8 @@
       return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${s.cls}">${s.label}</span>`;
     }
 
+    let allCowsData = [];
+
     // ── Load cows from backend ─────────────────────────────────────────────
     async function loadTernak() {
       const tbody = document.getElementById('ternak-tbody');
@@ -288,54 +289,107 @@
       try {
         const res = await fetch(`${API}/cows`);
         if (!res.ok) throw new Error('Gagal memuat data');
-        const cows = await res.json();
-
-        if (cows.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-sm text-gray-400">Belum ada data ternak.</td></tr>`;
-          countEl.textContent = 'Tidak ada data';
-          return;
-        }
-
-        countEl.textContent = `Menampilkan ${cows.length} ternak`;
-        tbody.innerHTML = cows.map(cow => {
-          const initials = (cow.owner_name || cow.caretaker || '??').slice(0, 2).toUpperCase();
-          const avatarColors = ['bg-emerald-50 text-emerald-700', 'bg-blue-50 text-blue-700', 'bg-amber-50 text-amber-700', 'bg-purple-50 text-purple-700', 'bg-teal-50 text-teal-700'];
-          const avatarCls = avatarColors[cow.id % avatarColors.length];
-          const ownerDisplay = cow.owner_name || cow.caretaker;
-          const canSell = !['SOLD', 'WAITING_CONFIRMATION', 'DEAD'].includes(cow.status);
-
-          return `
-              <tr onclick="window.location.href='detail_sapi_MooOS.html?code=${cow.cow_code}'" class="hover:bg-gray-50/50 transition-colors cursor-pointer">
-                <td class="p-4 text-sm font-mono text-gray-500">${cow.cow_code}</td>
-                <td class="p-4">
-                  <span class="text-sm font-medium text-slate-800">${cow.barn || '—'}</span>
-                </td>
-                <td class="p-4">
-                  ${ownerDisplay ? `
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full ${avatarCls} flex items-center justify-center font-bold text-xs shrink-0">${initials}</div>
-                    <span class="text-sm text-slate-700">${ownerDisplay}</span>
-                  </div>` : `<span class="text-sm text-gray-400">—</span>`}
-                </td>
-                <td class="p-4 text-sm text-gray-600">${cow.weight ? cow.weight + ' kg' : '—'}</td>
-                <td class="p-4">${statusLaktasiBadge(cow.lactate_status)}</td>
-                <td class="p-4">${statusJualBadge(cow.status)}</td>
-                <td class="p-4 text-right">
-                  <span class="text-sm font-bold text-slate-800">${(cow.litre_milked_today || 0).toFixed(1)} L</span>
-                </td>
-                <td class="p-4 text-center" onclick="event.stopPropagation()">
-                  ${canSell
-                    ? `<button onclick="openJualModal('${cow.cow_code}')" class="inline-flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 text-xs font-semibold transition-colors">Jual</button>`
-                    : `<span class="text-xs text-gray-400">—</span>`
-                  }
-                </td>
-              </tr>`;
-        }).join('');
+        allCowsData = await res.json();
+        
+        renderCows();
 
       } catch (err) {
         tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-sm text-red-500">⚠️ Gagal memuat data: ${err.message}. Pastikan backend berjalan di port 8000.</td></tr>`;
         countEl.textContent = 'Error';
       }
+    }
+
+    function renderCows(searchQuery = '') {
+      const tbody = document.getElementById('ternak-tbody');
+      const countEl = document.getElementById('ternak-count');
+      const q = searchQuery.toLowerCase();
+
+      const cows = allCowsData.filter(cow => {
+        if (!q) return true;
+        return (cow.cow_code && cow.cow_code.toLowerCase().includes(q)) || 
+               (cow.barn && cow.barn.toLowerCase().includes(q)) || 
+               (cow.owner_name && cow.owner_name.toLowerCase().includes(q)) || 
+               (cow.caretaker && cow.caretaker.toLowerCase().includes(q)) ||
+               (cow.status && cow.status.toLowerCase().includes(q));
+      });
+
+      if (cows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-sm text-gray-400">Tidak ada data ternak.</td></tr>`;
+        countEl.textContent = 'Tidak ada data';
+        return;
+      }
+
+      countEl.textContent = `Menampilkan ${cows.length} ternak`;
+      tbody.innerHTML = cows.map(cow => {
+        const initials = (cow.owner_name || cow.caretaker || '??').slice(0, 2).toUpperCase();
+        const avatarColors = ['bg-emerald-50 text-emerald-700', 'bg-blue-50 text-blue-700', 'bg-amber-50 text-amber-700', 'bg-purple-50 text-purple-700', 'bg-teal-50 text-teal-700'];
+        const avatarCls = avatarColors[cow.id % avatarColors.length];
+        const ownerDisplay = cow.owner_name || cow.caretaker;
+        const canSell = !['SOLD', 'WAITING_CONFIRMATION', 'DEAD'].includes(cow.status);
+
+        return `
+            <tr onclick="window.location.href='detail_sapi_MooOS.html?code=${cow.cow_code}'" class="hover:bg-gray-50/50 transition-colors cursor-pointer">
+              <td class="p-4 text-sm font-mono text-gray-500">${cow.cow_code}</td>
+              <td class="p-4">
+                <span class="text-sm font-medium text-slate-800">${cow.barn || '—'}</span>
+              </td>
+              <td class="p-4">
+                ${ownerDisplay ? `
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-full ${avatarCls} flex items-center justify-center font-bold text-xs shrink-0">${initials}</div>
+                  <span class="text-sm text-slate-700">${ownerDisplay}</span>
+                </div>` : `<span class="text-sm text-gray-400">—</span>`}
+              </td>
+              <td class="p-4 text-sm text-gray-600">${cow.weight ? cow.weight + ' kg' : '—'}</td>
+              <td class="p-4">${statusLaktasiBadge(cow.lactate_status)}</td>
+              <td class="p-4">${statusJualBadge(cow.status)}</td>
+              <td class="p-4 text-right">
+                <span class="text-sm font-bold text-slate-800">${(cow.litre_milked_today || 0).toFixed(1)} L</span>
+              </td>
+              <td class="p-4 text-center" onclick="event.stopPropagation()">
+                ${canSell
+                  ? `<button onclick="openJualModal('${cow.cow_code}')" class="inline-flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 text-xs font-semibold transition-colors">Jual</button>`
+                  : `<span class="text-xs text-gray-400">—</span>`
+                }
+              </td>
+            </tr>`;
+      }).join('');
+    }
+
+    function exportCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "ID Sapi,Kandang,Pemilik,Berat (kg),Status Laktasi,Status Jual,Susu Hari Ini (L)\n";
+      
+      const searchInput = document.getElementById('search-ternak');
+      const q = searchInput ? searchInput.value.toLowerCase() : '';
+      const filterFn = cow => {
+        if (!q) return true;
+        return (cow.cow_code && cow.cow_code.toLowerCase().includes(q)) || 
+               (cow.barn && cow.barn.toLowerCase().includes(q)) || 
+               (cow.owner_name && cow.owner_name.toLowerCase().includes(q)) || 
+               (cow.caretaker && cow.caretaker.toLowerCase().includes(q)) ||
+               (cow.status && cow.status.toLowerCase().includes(q));
+      };
+
+      allCowsData.filter(filterFn).forEach(cow => {
+        const id = cow.cow_code || '';
+        const barn = cow.barn || '';
+        const owner = `"${(cow.owner_name || cow.caretaker || '').replace(/"/g, '""')}"`;
+        const weight = cow.weight || 0;
+        const lactate = cow.lactate_status || 'Kering';
+        const status = cow.status || '';
+        const milk = cow.litre_milked_today || 0;
+        csvContent += `${id},${barn},${owner},${weight},${lactate},${status},${milk}\n`;
+      });
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "data_ternak_mooos.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      if(typeof showToast === 'function') showToast('File CSV berhasil diunduh', 'success');
     }
 
     // ── Modal helpers ──────────────────────────────────────────────────────
@@ -402,7 +456,15 @@
     });
 
     // ── Init ───────────────────────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', loadTernak);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTernak();
+      const searchInput = document.getElementById('search-ternak');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          renderCows(e.target.value);
+        });
+      }
+    });
 
   </script>
 </body>

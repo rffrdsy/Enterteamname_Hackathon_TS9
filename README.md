@@ -1,163 +1,159 @@
-# TailAdmin - Free Tailwind Admin Dashboard Template
+# 🐄 MooOS — Sistem Manajemen Ternak Koperasi Harapan Baru
 
-TailAdmin is a high-quality, open-source, and **free Tailwind CSS admin template** that is perfect for creating data-rich backends,
-powerful web applications and dashboard-admin projects.
+MooOS adalah platform manajemen peternakan sapi berbasis web yang terintegrasi dengan **Telegram Bot** untuk otomasi pencatatan harian. Dibangun untuk **Koperasi Harapan Baru** dengan skema bagi hasil 60% koperasi / 40% pemilik sapi.
 
-![TailAdmin Dashboard Preview](./banner.png)
+## 📋 Fitur Utama
 
-## Overview
+| Modul | Deskripsi |
+|-------|-----------|
+| **Dashboard** | Ringkasan metrik ternak, keuangan, dan notifikasi |
+| **Anggota** | Manajemen 20 penitip + 2 penanggungjawab |
+| **Ternak** | Data 30 sapi: bobot, usia, jenis, status, QR code |
+| **Hasil Produksi** | Tracking susu harian/mingguan/bulanan + auto-save MRP |
+| **Manajemen Pakan** | Rekomendasi order, tren harga, pembagian per kandang |
+| **Limbah & Pupuk** | Fermentasi kotoran → pupuk organik (14 hari) |
+| **Transaksi** | Arus kas, riwayat, filter & export CSV |
+| **Laporan** | Analisis keuangan 60/40, unduh PDF |
+| **Telegram Bot** | Lapor pakan/susu/limbah/sakit per kandang |
 
-TailAdmin provides essential UI components and layouts for building feature-rich, data-driven admin dashboards and control panels. It's built using:
+## 🏗️ Arsitektur
 
-- HTML
-- Alpine.js
-- Tailwind CSS
-- and Webpack (for bundling)
-
-### Quick Links
-
-- [✨ Visit Website](https://tailadmin.com)
-- [📄 Documentation](https://tailadmin.com/docs)
-- [⬇️ Download](https://tailadmin.com/download)
-- [🖌️ Figma Design File (Community Edition)](https://www.figma.com/community/file/1463141366275764364)
-- [⚡ Get PRO Version](https://tailadmin.com/pricing)
-
-### Demos
-
-- [Free Version](https://free-demo.tailadmin.com/)
-- [Pro Version](https://demo.tailadmin.com)
-
-### Other Versions
-
-- [Next.js Version](https://github.com/TailAdmin/free-nextjs-admin-dashboard)
-- [React.js Version](https://github.com/TailAdmin/free-react-tailwind-admin-dashboard)
-- [Vue.js Version](https://github.com/TailAdmin/vue-tailwind-admin-dashboard)
-- [Angular Version](https://github.com/TailAdmin/free-angular-tailwind-dashboard)
-- [Laravel Version](https://github.com/TailAdmin/tailadmin-laravel)
-
-## Installation
-
-### Prerequisites
-
-To get started with TailAdmin, ensure you have the following prerequisites installed and set up:
-
-- Node.js 18.x or later
-
-### Cloning the Repository
-
-Clone the repository using the following command:
-
-```bash
-git clone https://github.com/TailAdmin/tailadmin-free-tailwind-dashboard-template.git
+```
+┌───────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Frontend    │────▶│   FastAPI Backend │◀────│  Telegram Bot   │
+│  (HTML/JS/    │     │   (Python 3.x)   │     │  (pyTeleBot)    │
+│  TailwindCSS) │     │                  │     │                 │
+└───────────────┘     └────────┬─────────┘     └─────────────────┘
+                               │
+                      ┌────────▼─────────┐
+                      │   SQLite + ORM   │
+                      │  (SQLAlchemy)    │
+                      └──────────────────┘
 ```
 
-> Windows Users: place the repository near the root of your drive if you face issues while cloning.
+## 💰 Model Keuangan
 
-1. Install dependencies:
+- **Simpanan Pokok**: Rp 1.500.000 / anggota (sekali seumur hidup)
+- **Simpanan Wajib**: Rp 200.000 / sapi / bulan
+- **Bagi Hasil**: 60% koperasi, 40% pemilik sapi
+- **Pekerja**: 5 orang (2 kandang A, 2 kandang B, 1 admin) @ Rp 3.800.000
 
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
+## 🚀 Setup & Instalasi
 
-2. Start the development server:
-   ```bash
-   npm run start
-   # or
-   yarn start
-   ```
+### Prerequisites
+- **Node.js** (v16+)
+- **Python** (3.9+)
+- **pip**
 
-## Components
+### 1. Clone & Install Frontend
+```bash
+git clone <repository-url>
+cd Enterteamname_Hackathon_TS9
+npm install
+```
 
-TailAdmin is a pre-designed starting point for building a web-based dashboard using HTML, Alpine.js and Tailwind CSS. The template includes:
+### 2. Setup Backend
+```bash
+cd backend
+python -m venv venv
 
-- Sophisticated and accessible sidebar
-- Data visualization components
-- Prebuilt profile management and 404 page
-- Tables and Charts(Line and Bar)
-- Authentication forms and input elements
-- Alerts, Dropdowns, Modals, Buttons and more
-- Can't forget Dark Mode 🕶️
+# Windows
+venv\Scripts\activate
 
-## Feature Comparison
+# Linux/Mac
+source venv/bin/activate
 
-### Free Version
+pip install fastapi uvicorn sqlalchemy python-dotenv pytelegrambotapi qrcode pillow
+```
 
-- 1 Unique Dashboard
-- 30+ dashboard components
-- 50+ UI elements
-- Basic Figma design files
-- Community support
+### 3. Konfigurasi Environment
+Buat file `backend/.env`:
+```env
+API_TOKEN=your_telegram_bot_token
+BOT_USERNAME=your_bot_username
+ABYASA_ID=telegram_id_kandang_a
+AXEL_ID=telegram_id_kandang_b
+ELISA_ID=telegram_id_supplier_1
+RAFIF_ID=telegram_id_supplier_2
+```
 
-### Pro Version
+### 4. Jalankan
+```bash
+# Terminal 1 — Backend
+cd backend
+python main.py
+# Server berjalan di http://localhost:8000
 
-- 7 Unique Dashboards: Analytics, Ecommerce, Marketing, CRM, Stocks (more coming soon)
-- 500+ dashboard components and UI elements
-- Complete Figma design system file
-- Email support
+# Terminal 2 — Frontend
+npm run start
+# Dev server berjalan di http://localhost:3000
+```
 
-To learn more about pro version features and pricing, visit our [pricing page](https://tailadmin.com/pricing).
+## 📱 Telegram Bot Commands
 
-## Update Logs
+| Command | Fungsi |
+|---------|--------|
+| `/start` | Registrasi & deep-link QR scan |
+| `/lapor` | Menu laporan harian kandang |
 
-### Version 2.3.0 - [April 28, 2026]
-- Added **AI Dashboard** with token usage and revenue tracking.
-- Added **Sales Dashboard** with retention and multi-channel analytics.
-- Added **Finance Dashboard** with cashflow and balance management.
-- Introduced **6 New Layout variations** for improved UI flexibility.
-- Integrated **Advanced Data Visualization** with 7+ new chart types.
+### Menu `/lapor`:
+- 🌾 **Selesai Beri Pakan** — Catat pemberian pakan
+- 🥛 **Selesai Perah Susu** — Input liter susu per sapi
+- 💩 **Selesai Kumpul Limbah** — Catat pengumpulan limbah harian
+- 🩺 **Lapor Sapi Sakit/Mati** — Laporan kesehatan
 
-### Version 2.0.1 - [February 27, 2025]
+## 📁 Struktur Proyek
 
-#### Update Overview
+```
+├── backend/
+│   ├── .env              # Secrets (tidak di-commit)
+│   ├── main.py           # FastAPI server + routes
+│   ├── models.py         # SQLAlchemy ORM models
+│   ├── database.py       # DB init + seed data
+│   ├── financials.py     # MRP logic (Feed/Milk/Waste/Ops)
+│   ├── config.py         # Env-based configuration
+│   └── telegram_bot.py   # Telegram bot handlers
+│
+├── src/
+│   ├── dashboard_MooOS.html
+│   ├── anggota_MooOS.html
+│   ├── ternak_MooOS.html
+│   ├── hasil_MooOS.html
+│   ├── pakan_MooOS.html
+│   ├── limbah_MooOS.html
+│   ├── transaksi_MooOS.html
+│   ├── laporan_MooOS.html
+│   ├── pengaturan_MooOS.html
+│   ├── bantuan_MooOS.html
+│   ├── js/
+│   │   └── toast.js      # Toast notification system
+│   └── partials/
+│       ├── sidebar.html
+│       └── header.html
+│
+├── webpack.config.js
+├── package.json
+└── README.md
+```
 
-- Upgraded to Tailwind CSS v4 for better performance and efficiency.
-- Updated class usage to match the latest syntax and features.
-- Replaced deprecated class and optimized styles.
+## 🧪 API Endpoints
 
-#### Next Steps
+| Method | Path | Deskripsi |
+|--------|------|-----------|
+| GET | `/cows` | Daftar semua sapi |
+| GET | `/members` | Daftar semua anggota |
+| GET | `/milk/summary` | Ringkasan produksi susu |
+| POST | `/milk/financials` | Simpan data MRP susu |
+| GET | `/api/financials/feed` | Data pakan (chart + metrik) |
+| GET | `/api/financials/waste` | Data limbah/pupuk |
+| GET | `/api/financials/report?period=30` | Laporan keuangan agregat |
+| GET | `/reports/{type}/pdf?period=30` | Download laporan PDF |
+| GET | `/api/config` | Konfigurasi koperasi |
 
-- Run npm install or yarn install to update dependencies.
-- Check for any style changes or compatibility issues.
-- Refer to the Tailwind CSS v4 [Migration Guide](https://tailwindcss.com/docs/upgrade-guide) on this release. if needed.
-- This update keeps the project up to date with the latest Tailwind improvements. 🚀
+## 👥 Tim
 
-### Version 2.0.0 - [February 2025]
+**Enter Team Name** — Hackathon TS9
 
-Major update with comprehensive redesign and new features.
+---
 
-#### Major Improvements
-
-- Complete UI redesign of all pages and components
-- Enhanced user interface with new elements
-- Improved responsiveness and accessibility
-- New features: collapsible sidebar, chat, and calendar
-- Updated data visualization components
-
-#### New Features
-
-- Redesigned dashboards (Ecommerce, Analytics, Marketing, CRM)
-- Enhanced navigation with improved header and breadcrumbs
-- Advanced table components with sorting and filtering
-- New UI components (Avatar, Alert, Ribbon)
-- Full-featured calendar with drag-and-drop
-
-#### Breaking Changes
-
-- Updated sidebar component API
-- New charting library implementation
-- Revised authentication system
-- **Deprecations:** SimpleTable component and legacy icon set
-
-#### Previous Versions
-
-For detailed changelogs of previous versions (1.0.0 - 1.3.0), visit our [documentation](https://tailadmin.com/docs/update-logs/).
-
-## License
-
-The community edition of TailAdmin is released under the MIT License.
-
-## Support
-
-If you find this project helpful, please consider giving it a star on GitHub. Your support helps us continue developing and maintaining this template.
+> ⚠️ **Catatan**: Jangan commit file `.env` ke repository. Gunakan `.env.example` sebagai template.

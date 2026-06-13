@@ -15,7 +15,7 @@ SUPPLIER_NAMES = {
     ELISA_ID: "ELISA",
     RAFIF_ID: "RAFIF",
 }
-from database import conn, cursor
+from models import get_session, Session, Cow, FeedOrder, FeedOrderRecipient, MessageRef, DailyKandangLog
 
 from telebot.types import (
     InlineKeyboardMarkup,
@@ -104,15 +104,9 @@ def start(message):
 def _handle_confirm_sell(message, cow_code, hash_id):
     """Validasi QR scan: cocokkan cow_code + hash_id lalu tampilkan tombol konfirmasi."""
 
-    cursor.execute(
-        """
-        SELECT cow_code, status, hash_id, barn
-        FROM cows
-        WHERE cow_code = ?
-        """,
-        (cow_code,)
-    )
-    row = cursor.fetchone()
+    session = get_session()
+    cow = session.query(Cow).filter_by(cow_code=cow_code).first()
+    row = (cow.cow_code, cow.status, cow.hash_id, cow.barn) if cow else None
 
     if not row:
         bot.send_message(message.chat.id, "❌ QR Code tidak valid. Sapi tidak ditemukan.")
@@ -166,11 +160,9 @@ Tekan tombol di bawah untuk konfirmasi sapi siap dijual.
     )
 
     # Simpan referensi pesan agar tombol bisa dihapus setelah dikonfirmasi
-    cursor.execute(
-        "INSERT INTO message_refs(ref_type, ref_id, chat_id, message_id) VALUES (?, ?, ?, ?)",
-        ("confirmsell", cow_code, msg.chat.id, msg.message_id)
-    )
-    conn.commit()
+    session.add(MessageRef(ref_type="confirmsell", ref_id=cow_code, chat_id=msg.chat.id, message_id=msg.message_id))
+    session.commit()
+    Session.remove()
 
 
 # =========================
@@ -196,12 +188,17 @@ def lapor_kandang(message):
 
     today = datetime.now().strftime("%Y-%m-%d")
     
-    # Cek status pakan & susu hari ini
-    cursor.execute("SELECT id FROM daily_kandang_logs WHERE date = ? AND barn = ? AND type = 'PAKAN'", (today, barn))
-    pakan_log = cursor.fetchone()
+    # Cek status pakan & susu & limbah hari ini
+    session = get_session()
+    pakan_obj = session.query(DailyKandangLog).filter_by(date=today, barn=barn, type='PAKAN').first()
+    pakan_log = (pakan_obj.id,) if pakan_obj else None
     
-    cursor.execute("SELECT id FROM daily_kandang_logs WHERE date = ? AND barn = ? AND type = 'SUSU'", (today, barn))
-    susu_log = cursor.fetchone()
+    susu_obj = session.query(DailyKandangLog).filter_by(date=today, barn=barn, type='SUSU').first()
+    susu_log = (susu_obj.id,) if susu_obj else None
+
+    limbah_obj = session.query(DailyKandangLog).filter_by(date=today, barn=barn, type='LIMBAH').first()
+    limbah_log = (limbah_obj.id,) if limbah_obj else None
+    Session.remove()
 
     markup = InlineKeyboardMarkup(row_width=1)
     
@@ -216,6 +213,11 @@ def lapor_kandang(message):
         markup.add(InlineKeyboardButton("🥛 Selesai Perah Susu", callback_data=f"lapor_susu_{barn}"))
         
     markup.add(InlineKeyboardButton("🩺 Lapor Sapi Sakit/Mati", callback_data=f"lapor_sakit_{barn}"))
+
+    if limbah_log:
+        markup.add(InlineKeyboardButton("↩️ Batal (Undo) Limbah", callback_data=f"undo_log_{limbah_log[0]}"))
+    else:
+        markup.add(InlineKeyboardButton("💩 Selesai Kumpul Limbah", callback_data=f"lapor_limbah_{barn}"))
     
     bot.send_message(
         message.chat.id,
@@ -230,14 +232,10 @@ def lapor_kandang(message):
 
 def resend_waiting_confirmations():
     """Saat server nyala, kirim ulang notifikasi untuk sapi yang masih WAITING_CONFIRMATION."""
-    cursor.execute(
-        """
-        SELECT cow_code, barn, hash_id
-        FROM cows
-        WHERE status = 'WAITING_CONFIRMATION'
-        """
-    )
-    rows = cursor.fetchall()
+    session = get_session()
+    waiting_cows = session.query(Cow).filter_by(status='WAITING_CONFIRMATION').all()
+    rows = [(c.cow_code, c.barn, c.hash_id) for c in waiting_cows]
+    Session.remove()
     if not rows:
         return
     print(f"[STARTUP] {len(rows)} sapi masih WAITING_CONFIRMATION, mengirim ulang notifikasi...")
@@ -287,29 +285,20 @@ def start_bot():
 
 def clear_buttons(ref_type, ref_id):
     """Edit semua pesan terkait ref_id agar tombolnya hilang."""
-    cursor.execute(
-        """
-        SELECT chat_id, message_id
-        FROM message_refs
-        WHERE ref_type = ? AND ref_id = ?
-        """,
-        (ref_type, ref_id)
-    )
-    rows = cursor.fetchall()
-    for (chat_id, message_id) in rows:
+    session = get_session()
+    refs = session.query(MessageRef).filter_by(ref_type=ref_type, ref_id=ref_id).all()
+    for ref in refs:
         try:
             bot.edit_message_reply_markup(
-                chat_id=chat_id,
-                message_id=message_id,
+                chat_id=ref.chat_id,
+                message_id=ref.message_id,
                 reply_markup=InlineKeyboardMarkup()
             )
         except Exception as e:
-            print(f"Gagal hapus tombol chat_id={chat_id} msg_id={message_id}: {e}")
-    cursor.execute(
-        "DELETE FROM message_refs WHERE ref_type = ? AND ref_id = ?",
-        (ref_type, ref_id)
-    )
-    conn.commit()
+            print(f"Gagal hapus tombol chat_id={ref.chat_id} msg_id={ref.message_id}: {e}")
+    session.query(MessageRef).filter_by(ref_type=ref_type, ref_id=ref_id).delete()
+    session.commit()
+    Session.remove()
 
 
 # =========================
@@ -348,11 +337,10 @@ Apakah masih ada kapasitas?
                 reply_markup=markup
             )
             # Simpan referensi pesan untuk hapus tombol nanti
-            cursor.execute(
-                "INSERT INTO message_refs(ref_type, ref_id, chat_id, message_id) VALUES (?, ?, ?, ?)",
-                ("cow_accept", cow_id, msg.chat.id, msg.message_id)
-            )
-            conn.commit()
+            s = get_session()
+            s.add(MessageRef(ref_type="cow_accept", ref_id=cow_id, chat_id=msg.chat.id, message_id=msg.message_id))
+            s.commit()
+            Session.remove()
         except Exception as e:
             print(f"Gagal mengirim permintaan kandang ke {target}: {e}")
 
@@ -427,11 +415,10 @@ Mohon konfirmasi pesanan.
             reply_markup=markup
         )
         # Simpan referensi pesan untuk hapus tombol nanti
-        cursor.execute(
-            "INSERT INTO message_refs(ref_type, ref_id, chat_id, message_id) VALUES (?, ?, ?, ?)",
-            ("feed_order", po_id, msg.chat.id, msg.message_id)
-        )
-        conn.commit()
+        s = get_session()
+        s.add(MessageRef(ref_type="feed_order", ref_id=po_id, chat_id=msg.chat.id, message_id=msg.message_id))
+        s.commit()
+        Session.remove()
     except Exception as e:
         print(f"Gagal mengirim feed order ke {chat_id}: {e}")
 
@@ -449,17 +436,11 @@ def callback_handler(call):
 
         cow_id = call.data.replace("accept_", "")
 
-        cursor.execute(
-            """
-            SELECT caretaker
-            FROM cows
-            WHERE cow_code = ?
-            """,
-            (cow_id,)
-        )
-        row = cursor.fetchone()
+        session = get_session()
+        cow_obj = session.query(Cow).filter_by(cow_code=cow_id).first()
 
-        if row and row[0]:
+        if cow_obj and cow_obj.caretaker:
+            Session.remove()
             bot.answer_callback_query(call.id)
             bot.send_message(
                 call.message.chat.id,
@@ -486,23 +467,12 @@ def callback_handler(call):
         if not barn:
             barn = "UNKNOWN"
 
-        cursor.execute(
-            """
-            UPDATE cows
-            SET caretaker = ?,
-                barn = ?,
-                status = ?
-            WHERE cow_code = ?
-            """,
-            (
-                caretaker,
-                barn,
-                "AVAILABLE",
-                cow_id
-            )
-        )
-
-        conn.commit()
+        if cow_obj:
+            cow_obj.caretaker = caretaker
+            cow_obj.barn = barn
+            cow_obj.status = "AVAILABLE"
+            session.commit()
+        Session.remove()
 
         bot.answer_callback_query(call.id)
 
@@ -541,21 +511,13 @@ AVAILABLE
 
         cow_id = call.data.replace("reject_", "")
 
-        cursor.execute(
-            """
-            UPDATE cows
-            SET status = ?
-            WHERE cow_code = ?
-            """,
-            (
-                "REJECTED",
-                cow_id
-            )
-        )
-
-        print("Rows Updated:", cursor.rowcount)
-
-        conn.commit()
+        session = get_session()
+        cow_obj = session.query(Cow).filter_by(cow_code=cow_id).first()
+        if cow_obj:
+            cow_obj.status = "REJECTED"
+            session.commit()
+            print("Rows Updated: 1")
+        Session.remove()
 
         bot.answer_callback_query(call.id)
 
@@ -573,20 +535,19 @@ AVAILABLE
         cow_code = call.data.replace("confirmsell_", "")
 
         # Mutual exclusion: cek status terkini
-        cursor.execute(
-            "SELECT status FROM cows WHERE cow_code = ?",
-            (cow_code,)
-        )
-        row = cursor.fetchone()
+        session = get_session()
+        cow_obj = session.query(Cow).filter_by(cow_code=cow_code).first()
 
-        if not row:
+        if not cow_obj:
+            Session.remove()
             bot.answer_callback_query(call.id)
             bot.send_message(call.message.chat.id, "❌ Sapi tidak ditemukan.")
             return
 
-        current_status = row[0]
+        current_status = cow_obj.status
 
         if current_status == "SOLD":
+            Session.remove()
             bot.answer_callback_query(call.id)
             bot.send_message(
                 call.message.chat.id,
@@ -595,6 +556,7 @@ AVAILABLE
             return
 
         if current_status != "WAITING_CONFIRMATION":
+            Session.remove()
             bot.answer_callback_query(call.id)
             bot.send_message(
                 call.message.chat.id,
@@ -603,11 +565,9 @@ AVAILABLE
             return
 
         # Update status → SOLD
-        cursor.execute(
-            "UPDATE cows SET status = ? WHERE cow_code = ?",
-            ("SOLD", cow_code)
-        )
-        conn.commit()
+        cow_obj.status = "SOLD"
+        session.commit()
+        Session.remove()
 
         bot.answer_callback_query(call.id)
 
@@ -635,42 +595,25 @@ Sapi telah resmi terjual.
         po_id = call.data.replace("confirmpo_", "")
 
         # Cek apakah PO sudah diambil supplier lain
-        cursor.execute(
-            """
-            SELECT status, supplier
-            FROM feed_orders
-            WHERE po_code = ?
-            """,
-            (po_id,)
-        )
-        row = cursor.fetchone()
+        session = get_session()
+        fo = session.query(FeedOrder).filter_by(po_code=po_id).first()
 
-        if row and row[0] == "CONFIRMED":
+        if fo and fo.status == "CONFIRMED":
+            Session.remove()
             bot.answer_callback_query(call.id)
             bot.send_message(
                 call.message.chat.id,
-                f"❌ {po_id} sudah dikonfirmasi oleh {row[1]}."
+                f"❌ {po_id} sudah dikonfirmasi oleh {fo.supplier}."
             )
             return
 
         telegram_id = call.from_user.id
         supplier_name = SUPPLIER_NAMES.get(telegram_id, "UNKNOWN")
 
-        cursor.execute(
-            """
-            UPDATE feed_orders
-            SET status = ?,
-                supplier = ?
-            WHERE po_code = ?
-            """,
-            (
-                "CONFIRMED",
-                supplier_name,
-                po_id
-            )
-        )
-
-        conn.commit()
+        if fo:
+            fo.status = "CONFIRMED"
+            fo.supplier = supplier_name
+            session.commit()
 
         bot.answer_callback_query(call.id)
 
@@ -685,16 +628,12 @@ Sapi telah resmi terjual.
         clear_buttons("feed_order", po_id)
 
         # Notify supplier lain bahwa PO sudah diambil
-        cursor.execute(
-            """
-            SELECT telegram_id
-            FROM feed_order_recipients
-            WHERE po_code = ?
-            AND telegram_id != ?
-            """,
-            (po_id, telegram_id)
-        )
-        other_recipients = cursor.fetchall()
+        other_recipients = session.query(FeedOrderRecipient).filter(
+            FeedOrderRecipient.po_code == po_id,
+            FeedOrderRecipient.telegram_id != telegram_id,
+        ).all()
+        other_recipients = [(r.telegram_id,) for r in other_recipients]
+        Session.remove()
 
         for (other_id,) in other_recipients:
             try:
@@ -711,19 +650,12 @@ Sapi telah resmi terjual.
 
         po_id = call.data.replace("rejectpo_", "")
 
-        cursor.execute(
-            """
-            UPDATE feed_orders
-            SET status = ?
-            WHERE po_code = ?
-            """,
-            (
-                "REJECTED",
-                po_id
-            )
-        )
-
-        conn.commit()
+        session = get_session()
+        fo = session.query(FeedOrder).filter_by(po_code=po_id).first()
+        if fo:
+            fo.status = "REJECTED"
+            session.commit()
+        Session.remove()
 
         bot.answer_callback_query(call.id)
 
@@ -742,11 +674,10 @@ Sapi telah resmi terjual.
         telegram_id = call.from_user.id
         today = datetime.now().strftime("%Y-%m-%d")
         
-        cursor.execute(
-            "INSERT INTO daily_kandang_logs (date, barn, type, telegram_id) VALUES (?, ?, ?, ?)",
-            (today, barn, 'PAKAN', telegram_id)
-        )
-        conn.commit()
+        session = get_session()
+        session.add(DailyKandangLog(date=today, barn=barn, type='PAKAN', telegram_id=telegram_id))
+        session.commit()
+        Session.remove()
         
         bot.answer_callback_query(call.id, "Laporan Pakan disimpan!")
         bot.edit_message_text(
@@ -757,11 +688,48 @@ Sapi telah resmi terjual.
             reply_markup=InlineKeyboardMarkup()
         )
 
+    elif call.data.startswith("lapor_limbah_"):
+        barn = call.data.replace("lapor_limbah_", "")
+        telegram_id = call.from_user.id
+        today = datetime.now().strftime("%Y-%m-%d")
+        
+        session = get_session()
+        # Count active cows in this barn
+        cow_count = session.query(Cow).filter(
+            Cow.barn == barn,
+            ~Cow.status.in_(['SOLD', 'DEAD', 'REJECTED']),
+        ).count()
+        waste_kg = cow_count * 10  # 10 kg per sapi per hari
+        
+        session.add(DailyKandangLog(date=today, barn=barn, type='LIMBAH', telegram_id=telegram_id))
+        session.commit()
+        Session.remove()
+        
+        bot.answer_callback_query(call.id, f"Limbah {waste_kg} kg dicatat!")
+        bot.edit_message_text(
+            f"✅ *Limbah* Kandang {barn} dicatat.\n\n"
+            f"🐄 Sapi aktif: {cow_count} ekor\n"
+            f"💩 Total limbah hari ini: {waste_kg} kg\n"
+            f"♻️ Est. pupuk setelah fermentasi: {int(waste_kg * 0.6)} kg\n\n"
+            f"_Ketik /lapor lagi untuk melihat menu lainnya atau membatalkan._",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup()
+        )
+
     elif call.data.startswith("lapor_susu_"):
         barn = call.data.replace("lapor_susu_", "")
         
-        cursor.execute("SELECT cow_code FROM cows WHERE barn = ? AND status NOT IN ('SOLD', 'DEAD', 'REJECTED') AND (jenis = 'Perah' OR lactate_status = 'Laktasi')", (barn,))
-        rows = cursor.fetchall()
+        session = get_session()
+        cows_q = session.query(Cow).filter(
+            Cow.barn == barn,
+            ~Cow.status.in_(['SOLD', 'DEAD', 'REJECTED']),
+        ).filter(
+            (Cow.jenis == 'Perah') | (Cow.lactate_status == 'Laktasi')
+        ).all()
+        rows = [(c.cow_code,) for c in cows_q]
+        Session.remove()
         
         if not rows:
             bot.answer_callback_query(call.id, "Tidak ada Sapi Perah aktif.")
@@ -850,17 +818,18 @@ Sapi telah resmi terjual.
             
         bot.answer_callback_query(call.id, "Menyimpan data susu...")
         
+        session = get_session()
         for cow, liters in state['liters'].items():
-            cursor.execute("UPDATE cows SET litre_milked_today = ? WHERE cow_code = ?", (liters, cow))
+            cow_obj = session.query(Cow).filter_by(cow_code=cow).first()
+            if cow_obj:
+                cow_obj.litre_milked_today = liters
         
         from datetime import datetime
         today = datetime.now().strftime("%Y-%m-%d")
         telegram_id = call.from_user.id
-        cursor.execute(
-            "INSERT INTO daily_kandang_logs (date, barn, type, telegram_id) VALUES (?, ?, ?, ?)",
-            (today, state['barn'], 'SUSU', telegram_id)
-        )
-        conn.commit()
+        session.add(DailyKandangLog(date=today, barn=state['barn'], type='SUSU', telegram_id=telegram_id))
+        session.commit()
+        Session.remove()
         
         bot.edit_message_text(
             "✅ *Laporan Susu Selesai!*\nSemua data telah disimpan.\nData MRP Susu sedang disinkronisasi...",
@@ -881,8 +850,13 @@ Sapi telah resmi terjual.
         barn = call.data.replace("lapor_sakit_", "")
         
         # Ambil daftar sapi di kandang tersebut
-        cursor.execute("SELECT cow_code FROM cows WHERE barn = ? AND status NOT IN ('SOLD', 'DEAD', 'REJECTED')", (barn,))
-        rows = cursor.fetchall()
+        session = get_session()
+        cows_q = session.query(Cow).filter(
+            Cow.barn == barn,
+            ~Cow.status.in_(['SOLD', 'DEAD', 'REJECTED']),
+        ).all()
+        rows = [(c.cow_code,) for c in cows_q]
+        Session.remove()
         
         if not rows:
             bot.answer_callback_query(call.id)
@@ -916,8 +890,11 @@ Sapi telah resmi terjual.
         
     elif call.data.startswith("marksick_"):
         cow_code = call.data.replace("marksick_", "")
-        cursor.execute("UPDATE cows SET status = 'SICK' WHERE cow_code = ?", (cow_code,))
-        conn.commit()
+        session = get_session()
+        cow_obj = session.query(Cow).filter_by(cow_code=cow_code).first()
+        if cow_obj: cow_obj.status = 'SICK'
+        session.commit()
+        Session.remove()
         
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("↩️ Batalkan (Undo)", callback_data=f"undo_sick_{cow_code}"))
@@ -927,8 +904,11 @@ Sapi telah resmi terjual.
         
     elif call.data.startswith("markdead_"):
         cow_code = call.data.replace("markdead_", "")
-        cursor.execute("UPDATE cows SET status = 'DEAD' WHERE cow_code = ?", (cow_code,))
-        conn.commit()
+        session = get_session()
+        cow_obj = session.query(Cow).filter_by(cow_code=cow_code).first()
+        if cow_obj: cow_obj.status = 'DEAD'
+        session.commit()
+        Session.remove()
         
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("↩️ Batalkan (Undo)", callback_data=f"undo_dead_{cow_code}"))
@@ -941,8 +921,10 @@ Sapi telah resmi terjual.
     # ===============================
     elif call.data.startswith("undo_log_"):
         log_id = call.data.replace("undo_log_", "")
-        cursor.execute("DELETE FROM daily_kandang_logs WHERE id = ?", (log_id,))
-        conn.commit()
+        session = get_session()
+        session.query(DailyKandangLog).filter_by(id=int(log_id)).delete()
+        session.commit()
+        Session.remove()
         
         bot.answer_callback_query(call.id, "Laporan dibatalkan!")
         bot.edit_message_text(
@@ -957,8 +939,11 @@ Sapi telah resmi terjual.
         parts = call.data.split("_")
         cow_code = parts[2]
         
-        cursor.execute("UPDATE cows SET status = 'AVAILABLE' WHERE cow_code = ?", (cow_code,))
-        conn.commit()
+        session = get_session()
+        cow_obj = session.query(Cow).filter_by(cow_code=cow_code).first()
+        if cow_obj: cow_obj.status = 'AVAILABLE'
+        session.commit()
+        Session.remove()
         
         bot.answer_callback_query(call.id, "Status dibatalkan!")
         bot.edit_message_text(

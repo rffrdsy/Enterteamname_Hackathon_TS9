@@ -11,6 +11,7 @@
   <title>Laporan & Analisis | MooOS - Manajemen Ternak</title>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="./js/toast.js" defer></script>
   <style>
     /* Micro-animations */
     @keyframes fadeUp {
@@ -519,14 +520,13 @@
   <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
   <script>
     const API = 'http://localhost:8000';
-    const HARGA_PER_KG_SAPI = 55000; // estimasi harga jual per kg bobot hidup
 
     // ── Helpers ──────────────────────────────────────────────────
     const fmt = n => n == null ? '—'
       : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
     // ── Load dari backend ─────────────────────────────────────────
-    async function loadData(period = 'all') {
+    async function loadData(period = '30') {
       try {
         const [cowsRes, reportRes] = await Promise.all([
           fetch(`${API}/cows`),
@@ -584,10 +584,17 @@
       const netProfit = report?.summary?.laba_koperasi ?? 0;
       document.getElementById('fin-net-profit').textContent = fmt(netProfit);
 
-      // Update status badge
-      const statusEl = document.querySelector('#section-net-profit ~ div .font-semibold');
-      if (statusEl) {
-        statusEl.textContent = netProfit >= 0 ? 'Positif \u2022 Sehat' : 'Negatif \u2022 Perlu Evaluasi';
+      // Dynamic hero card color based on profit/loss
+      const heroCard = document.querySelector('[aria-labelledby="section-net-profit"] > div');
+      const statusText = heroCard?.querySelector('.font-semibold');
+      if (heroCard) {
+        if (netProfit >= 0) {
+          heroCard.className = 'bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden';
+          if (statusText) statusText.textContent = 'Positif \u2022 Sehat';
+        } else {
+          heroCard.className = 'bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl p-6 shadow-lg shadow-rose-500/20 text-white relative overflow-hidden';
+          if (statusText) statusText.textContent = 'Negatif \u2022 Perlu Evaluasi';
+        }
       }
     }
 
@@ -600,25 +607,26 @@
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"></circle>
         <path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Menyiapkan...`;
 
-      // Simulasi proses (integrasi backend nantinya)
-      await new Promise(r => setTimeout(r, 1200));
-
-      const period = document.getElementById('periode-select')?.value || 'all';
+      const period = document.getElementById('periode-select')?.value || '30';
       window.open(`${API}/reports/${type}/pdf?period=${period}`, '_blank');
 
-      btn.disabled = false;
-      btn.innerHTML = orig;
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+      }, 1500);
     }
 
     // ── Init ──────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
       const select = document.getElementById('periode-select');
       if (select) {
+        // Default to 30 hari for meaningful data
+        select.value = '30';
         select.addEventListener('change', (e) => {
           loadData(e.target.value);
         });
       }
-      loadData(select ? select.value : 'all');
+      loadData('30');
     });
   </script>
 </body>

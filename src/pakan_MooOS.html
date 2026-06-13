@@ -7,6 +7,8 @@
     content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Pakan | MooOS - Manajemen Ternak</title>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0/dist/apexcharts.min.js"></script>
+  <script src="./js/toast.js" defer></script>
 </head>
 
 <body x-data="{ page: 'pakanMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
@@ -564,7 +566,8 @@
     document.addEventListener('DOMContentLoaded', async () => {
       // Fetch data dari API
       try {
-        const response = await fetch('/api/financials/feed');
+        const response = await fetch('http://localhost:8000/api/financials/feed');
+        if(!response.ok) throw new Error('API error');
         const data = await response.json();
         
         // Format history for chart
@@ -618,7 +621,11 @@
         btnConfirm.addEventListener('click', () => {
           modal.classList.add('hidden');
           console.log('Mengarahkan ke form pembelian/pemilihan supplier...');
-          alert('Pembelian dilanjutkan: Mengarahkan ke form pembelian/pemilihan supplier...');
+          if(typeof showToast === 'function') showToast('Pembelian pakan dilanjutkan via Telegram', 'success');
+          // Trigger buy-feed via API
+          fetch('http://localhost:8000/buy-feed', {method:'POST'}).then(r=>r.json()).then(d=>{
+            if(typeof showToast==='function') showToast(`PO ${d.po_code} dikirim ke supplier`, 'success');
+          }).catch(()=>{if(typeof showToast==='function') showToast('Gagal mengirim PO', 'error');});
         });
       }
 

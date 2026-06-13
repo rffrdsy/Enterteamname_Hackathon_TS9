@@ -8,6 +8,7 @@
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Detail Anggota | MooOS - Manajemen Ternak</title>
+    <script src="./js/toast.js" defer></script>
   </head>
   <body
     x-data="{ page: 'anggotaMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
@@ -201,7 +202,7 @@
                 const memberId = params.get('id');
                 
                 if (!memberId) {
-                  alert('ID Anggota tidak valid');
+                  if(typeof showToast==='function') showToast('ID Anggota tidak valid', 'error');
                   window.location.href = 'anggota_MooOS.html';
                   return;
                 }
@@ -252,7 +253,7 @@
 
                 } catch (err) {
                   console.error(err);
-                  alert(err.message);
+                  if(typeof showToast==='function') showToast(err.message, 'error');
                 }
               }
 

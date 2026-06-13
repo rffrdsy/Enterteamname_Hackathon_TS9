@@ -8,6 +8,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Manajemen Limbah | MooOS - Manajemen Ternak</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="./js/toast.js" defer></script>
 </head>
 
 <body x-data="{ page: 'limbahMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
@@ -108,8 +109,8 @@
         const res = await fetch(`${API}/api/financials/waste`);
         const data = await res.json();
         
-        document.getElementById('daily-waste').textContent = data.daily_waste_kg;
-        document.getElementById('active-cows').textContent = `${data.active_cows} sapi aktif (@ 5kg/hari)`;
+        document.getElementById('daily-waste').textContent = data.daily_waste_kg_fresh || data.daily_waste_kg || 0;
+        document.getElementById('active-cows').textContent = `${data.active_cows} sapi aktif (@ 10kg/hari)`;
         document.getElementById('ready-fertilizer').textContent = data.total_ready_kg;
         document.getElementById('current-price').textContent = `Rp ${data.current_price_per_kg.toLocaleString('id-ID')}`;
         document.getElementById('total-value').textContent = `Rp ${(data.total_ready_kg * data.current_price_per_kg).toLocaleString('id-ID')}`;
@@ -198,11 +199,11 @@
       try {
         const res = await fetch(`${API}/api/financials/waste/collect`, { method: 'POST' });
         const data = await res.json();
-        alert(data.message);
+        if(typeof showToast==='function') showToast(data.message, 'success');
         loadLimbahData();
       } catch (err) {
         console.error("Gagal collect waste:", err);
-        alert("Gagal mencatat limbah harian.");
+        if(typeof showToast==='function') showToast('Gagal mencatat limbah harian.', 'error');
       }
     }
 

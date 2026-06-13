@@ -30,6 +30,7 @@
       transition: background-color 0.3s;
     }
   </style>
+  <script src="./js/toast.js" defer></script>
 </head>
 
 <body
@@ -167,7 +168,7 @@
 
                 </div>
                 <div class="px-6 py-4 border-t border-gray-50 bg-gray-50/50 flex justify-end">
-                  <button class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors" onclick="alert('Pengaturan MRP berhasil disimpan!')">
+                  <button class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors" onclick="if(typeof showToast==='function') showToast('Pengaturan MRP berhasil disimpan!', 'success')">
                     Simpan Konfigurasi
                   </button>
                 </div>

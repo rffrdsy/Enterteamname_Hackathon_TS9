@@ -8,6 +8,7 @@
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Anggota | MooOS - Manajemen Ternak</title>
+    <script src="./js/toast.js" defer></script>
   </head>
   <body
     x-data="{ page: 'anggotaMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false, 'activeTab': 'semua' }"
@@ -331,6 +332,7 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        if(typeof showToast === 'function') showToast('File CSV berhasil diunduh', 'success');
       }
 
       async function loadAnggota() {

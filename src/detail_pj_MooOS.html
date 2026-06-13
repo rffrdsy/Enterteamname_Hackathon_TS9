@@ -7,6 +7,7 @@
     content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Detail Penanggungjawab | MooOS - Manajemen Ternak</title>
+  <script src="./js/toast.js" defer></script>
 </head>
 
 <body x-data="{ page: 'anggotaMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
@@ -229,7 +230,7 @@
               const pjId = params.get('id');
 
               if (!pjId) {
-                alert('ID Penanggungjawab tidak valid');
+                if(typeof showToast==='function') showToast('ID Penanggungjawab tidak valid', 'error');
                 window.location.href = 'anggota_MooOS.html';
                 return;
               }
@@ -276,7 +277,7 @@
 
               } catch (err) {
                 console.error(err);
-                alert(err.message);
+                if(typeof showToast==='function') showToast(err.message, 'error');
               }
             }
 
