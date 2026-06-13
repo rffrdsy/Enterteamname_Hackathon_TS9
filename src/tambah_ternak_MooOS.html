@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Tambah Ternak | MooOS - Manajemen Ternak</title>
+</head>
+
+<body x-data="{ page: 'ternakMooOS', 'loaded': true, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+  class="bg-gray-50 text-gray-800">
+  <!-- ===== Preloader Start ===== -->
+  <include src="./partials/preloader.html"></include>
+  <!-- ===== Preloader End ===== -->
+
+  <!-- ===== Page Wrapper Start ===== -->
+  <div class="flex h-screen overflow-hidden">
+    <!-- ===== Sidebar Start ===== -->
+    <include src="./partials/sidebar.html"></include>
+    <!-- ===== Sidebar End ===== -->
+
+    <!-- ===== Content Area Start ===== -->
+    <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+      <!-- Small Device Overlay Start -->
+      <include src="./partials/overlay.html" />
+      <!-- Small Device Overlay End -->
+
+      <!-- ===== Header Start ===== -->
+      <include src="./partials/header.html" />
+      <!-- ===== Header End ===== -->
+
+      <!-- ===== Main Content Start ===== -->
+      <main>
+        <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-6" x-data="{
+            cowId: '',
+            weight: '',
+            age: '',
+            breed: '',
+            entryDate: '',
+            lactate: 'Kering',
+            ownerId: '',
+            members: [],
+            showModal: false,
+            isLoading: false,
+            errorMsg: '',
+            successMsg: '',
+            qrUrl: '',
+            savedCowId: '',
+            imageFile: null,
+            imageName: '',
+            async init() {
+                try {
+                    const res = await fetch('http://localhost:8000/members');
+                    if(res.ok) {
+                        const data = await res.json();
+                        this.members = Array.isArray(data) ? data : [];
+                    }
+                    
+                    const resCows = await fetch('http://localhost:8000/cows');
+                    if(resCows.ok) {
+                        const cows = await resCows.json();
+                        let maxId = 0;
+                        if(Array.isArray(cows)) {
+                            cows.forEach(c => {
+                                if(c.cow_code && c.cow_code.startsWith('SPI-')) {
+                                    const num = parseInt(c.cow_code.replace('SPI-', ''), 10);
+                                    if(!isNaN(num) && num > maxId) maxId = num;
+                                }
+                            });
+                        }
+                        this.cowId = 'SPI-' + String(maxId + 1).padStart(4, '0');
+                    }
+                } catch(e) {
+                    console.error('Failed to fetch initial data:', e);
+                }
+            },
+            handleImageUpload(e) {
+                if(e.target.files.length > 0) {
+                    this.imageFile = e.target.files[0];
+                    this.imageName = this.imageFile.name;
+                }
+            },
+            async submitForm() {
+              if (!this.cowId) {
+                this.errorMsg = 'Mohon lengkapi ID Sapi.';
+                return;
+              }
+              if (!this.ownerId) {
+                this.errorMsg = 'Mohon pilih pemilik sapi.';
+                return;
+              }
+              
+              this.errorMsg = '';
+              this.isLoading = true;
+              
+              let ownerName = '';
+              let finalOwnerId = this.ownerId;
+              const sel = this.members.find(m => m.id == this.ownerId);
+              if (sel) {
+                  ownerName = sel.name;
+              }
+
+              const payload = {
+                  cow_id: this.cowId,
+                  owner: ownerName,
+                  owner_id: finalOwnerId,
+                  weight: parseFloat(this.weight) || null,
+                  umur: this.age || null,
+                  jenis: this.breed || null,
+                  tgl_masuk: this.entryDate || null,
+                  lactate_status: this.lactate || null
+              };
+
+              try {
+                const res = await fetch('http://localhost:8000/new-cow', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok) {
+                  this.errorMsg = data.detail || 'Terjadi kesalahan pada server.';
+                  this.isLoading = false;
+                  return;
+                }
+                
+                if (this.imageFile) {
+                    const formData = new FormData();
+                    formData.append('foto', this.imageFile);
+                    await fetch(`http://localhost:8000/cows/${this.cowId}/foto`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                
+                this.savedCowId = this.cowId;
+                this.qrUrl = data.qr_url || '';
+                this.successMsg = 'Data sapi ' + this.cowId + ' berhasil disimpan. QR Code siap diunduh untuk ditempel di kuping sapi.';
+                this.showModal = true;
+              } catch(err) {
+                this.errorMsg = 'Koneksi gagal: ' + err.message + '. Pastikan backend berjalan di port 8000.';
+              }
+              this.isLoading = false;
+            },
+            resetForm() {
+              this.cowId = '';
+              this.weight = '';
+              this.age = '';
+              this.breed = '';
+              this.entryDate = '';
+              this.lactate = 'Kering';
+              this.ownerId = '';
+              this.imageFile = null;
+              this.imageName = '';
+              this.showModal = false;
+              this.qrUrl = '';
+              this.savedCowId = '';
+              this.errorMsg = '';
+              this.successMsg = '';
+              document.getElementById('add-cow-image').value = '';
+              this.$nextTick(() => this.init());
+            }
+          }">
+
+          <!-- Area Header -->
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Pendaftaran Ternak</h1>
+              <p class="text-sm text-gray-500 mt-1">Daftarkan ternak baru ke dalam sistem MooOS</p>
+            </div>
+          </div>
+
+          <!-- 1. CARD FORMULIR -->
+          <div class="bg-white border border-gray-100 rounded-xl shadow-xs overflow-hidden max-w-3xl">
+            <!-- Header Card -->
+            <div class="flex items-center gap-3 border-b border-gray-100 p-5">
+              <div class="w-10 h-10 rounded-lg bg-green-50 text-green-700 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-base font-semibold text-slate-800">Data Ternak Baru</h2>
+                <p class="text-xs text-gray-400">Isi data sapi dengan benar</p>
+              </div>
+            </div>
+
+            <!-- Form Body -->
+            <form class="p-6 space-y-5" @submit.prevent="submitForm()">
+
+              <!-- Error Alert -->
+              <div x-show="errorMsg" x-transition
+                class="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700" x-text="errorMsg"
+                style="display:none;"></div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Field 1: ID Sapi -->
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium text-gray-700">ID Sapi / Eartag <span class="text-red-500">*</span></label>
+                    <input type="text" x-model="cowId" readonly
+                      class="w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-4 py-2.5 text-sm focus:outline-none font-mono cursor-not-allowed" />
+                  </div>
+
+                  <!-- Field: Pemilik -->
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium text-gray-700">Pemilik <span class="text-red-500">*</span></label>
+                    <select x-model="ownerId" required
+                      class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
+                      <option value="" disabled selected>Pilih Pemilik...</option>
+                      <template x-for="member in members" :key="member.id">
+                        <option :value="member.id" x-text="member.name + ' (' + member.role + ')'"></option>
+                      </template>
+                    </select>
+                  </div>
+    
+                  <!-- Field 2: Berat -->
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium text-gray-700">Berat (Kg)</label>
+                    <input type="number" step="0.1" x-model="weight" placeholder="Cth: 450"
+                      class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  </div>
+    
+                  <!-- Field 3: Usia -->
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium text-gray-700">Usia</label>
+                    <input type="text" x-model="age" placeholder="Cth: 2 Tahun"
+                      class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  </div>
+                  
+                  <!-- Field 4: Breed -->
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium text-gray-700">Jenis (Breed)</label>
+                    <input type="text" x-model="breed" placeholder="Cth: Holstein"
+                      class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  </div>
+                  
+                  <!-- Field 5: Tgl Masuk -->
+                  <div class="space-y-1.5">
+                    <label class="text-sm font-medium text-gray-700">Tanggal Masuk</label>
+                    <input type="date" x-model="entryDate"
+                      class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  </div>
+    
+                  <!-- Field 6: Status Laktasi -->
+                  <div class="col-span-2 space-y-1.5">
+                    <label class="text-sm font-medium text-gray-700">Status Laktasi</label>
+                    <select x-model="lactate"
+                      class="w-full rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
+                      <option value="Kering">Kering (Belum laktasi / Hamil)</option>
+                      <option value="Laktasi Aktif">Laktasi Aktif</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Field 7: Gambar -->
+                  <div class="col-span-2 space-y-1.5">
+                    <label class="text-sm font-medium text-gray-700">Gambar Sapi (Opsional)</label>
+                    <div class="flex items-center justify-center w-full">
+                        <label for="add-cow-image" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg class="w-8 h-8 mb-3 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                </svg>
+                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Klik untuk unggah</span> atau drag and drop</p>
+                                <p class="text-xs text-gray-500">PNG, JPG (MAX. 2MB)</p>
+                            </div>
+                            <input id="add-cow-image" type="file" class="hidden" accept="image/*" @change="handleImageUpload" />
+                        </label>
+                    </div>
+                    <p class="text-xs text-green-600 mt-2 font-medium text-center" x-show="imageName" x-text="imageName"></p>
+                  </div>
+              </div>
+
+              <!-- Footer Card Buttons -->
+              <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <a href="ternak_MooOS.html"
+                  class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none">
+                  Batal
+                </a>
+                <button type="submit" :disabled="isLoading"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none shadow-sm">
+                  <svg x-show="isLoading" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24" style="display:none;">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                  </svg>
+                  <span x-text="isLoading ? 'Menyimpan...' : 'Simpan Data'">Simpan Data</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- 3. POP-UP MODAL (Berhasil Mendaftar) -->
+          <div class="fixed inset-0 z-99999 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+            x-show="showModal" x-transition style="display: none;">
+            <div
+              class="bg-white rounded-xl shadow-xl border border-gray-100 w-full max-w-md p-6 flex flex-col items-center text-center">
+              <!-- Checklist Success Icon -->
+              <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+
+              <h3 class="text-lg font-bold text-slate-800">Ternak Berhasil Ditambah!</h3>
+              <p class="text-sm text-gray-500 mt-2 max-w-xs leading-relaxed" x-text="successMsg"></p>
+
+              <!-- QR Code Display -->
+              <div x-show="qrUrl" class="mt-5 w-full">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">QR Code Eartag</p>
+                <div class="border border-gray-200 rounded-xl p-4 bg-gray-50 inline-block">
+                  <img :src="qrUrl" :alt="'QR ' + savedCowId" class="w-40 h-40 mx-auto" />
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Scan QR ini mengarah ke halaman detail sapi</p>
+                <a :href="qrUrl" :download="savedCowId + '-QR.png'"
+                  class="mt-3 inline-flex items-center justify-center gap-2 w-full rounded-lg bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" x2="12" y1="15" y2="3"/>
+                  </svg>
+                  Unduh QR Code
+                </a>
+              </div>
+
+              <div class="flex items-center gap-3 w-full mt-4">
+                <button @click="resetForm()"
+                  class="flex-1 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none">
+                  Tambah Lagi
+                </button>
+                <a href="ternak_MooOS.html"
+                  class="flex-1 inline-flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none">
+                  Ke Direktori
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+      <!-- ===== Main Content End ===== -->
+    </div>
+    <!-- ===== Content Area End ===== -->
+  </div>
+  <!-- ===== Page Wrapper End ===== -->
+</body>
+
+</html>

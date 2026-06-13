@@ -74,11 +74,13 @@
               <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 p-5 bg-white">
                 <h2 class="text-base font-semibold text-slate-800">Direktori Anggota</h2>
                 <div class="flex items-center gap-3">
-                  <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                    <span>Filter</span>
-                  </button>
-                  <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors">
+                  <div class="relative">
+                    <input type="text" id="search-anggota" placeholder="Cari anggota..." class="rounded-lg border border-gray-200 bg-white px-3.5 py-2 pl-9 text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-colors w-48 sm:w-64" />
+                    <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/>
+                    </svg>
+                  </div>
+                  <button id="btn-export" onclick="exportCSV()" class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     <span>Ekspor</span>
                   </button>
@@ -267,6 +269,70 @@
         document.getElementById(countId).textContent = 'Memuat...';
       }
 
+      let allPenitipData = [];
+      let allPJData = [];
+
+      function renderData(searchQuery = '') {
+        const q = searchQuery.toLowerCase();
+        const filterFn = m => {
+          if (!q) return true;
+          return (m.name && m.name.toLowerCase().includes(q)) || 
+                 (m.nik && String(m.nik).toLowerCase().includes(q)) || 
+                 (m.phone && String(m.phone).toLowerCase().includes(q)) ||
+                 (m.alamat && m.alamat.toLowerCase().includes(q));
+        };
+        
+        const filteredPenitip = allPenitipData.filter(filterFn);
+        const filteredPJ = allPJData.filter(filterFn);
+
+        document.getElementById('tbody-semua').innerHTML = buildRowsPenitip(filteredPenitip) + buildRowsPJ(filteredPJ);
+        document.getElementById('tbody-penitip').innerHTML = buildRowsPenitip(filteredPenitip);
+        document.getElementById('tbody-pj').innerHTML = buildRowsPJ(filteredPJ);
+
+        const total = filteredPenitip.length + filteredPJ.length;
+        document.getElementById('count-semua').textContent = `Menampilkan ${total} anggota`;
+        document.getElementById('count-penitip').textContent = `Menampilkan ${filteredPenitip.length} anggota`;
+        document.getElementById('count-pj').textContent = `Menampilkan ${filteredPJ.length} penanggungjawab`;
+        document.getElementById('tab-count-semua').textContent = total;
+      }
+
+      function exportCSV() {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "ID,Kategori,Nama,NIK,Kontak,Alamat,Ternak Dikelola\n";
+        
+        const appendRow = (m, category) => {
+            const idStr = category === 'Penitip Ternak' ? `MBR-${String(m.id).padStart(3, '0')}` : `PJ-${String(m.id).padStart(3, '0')}`;
+            const name = `"${m.name ? String(m.name).replace(/"/g, '""') : ''}"`;
+            const nik = `="${m.nik || ''}"`;
+            const phone = `="${m.phone || ''}"`;
+            const alamat = `"${m.alamat ? String(m.alamat).replace(/"/g, '""') : ''}"`;
+            const cows = m.cow_count || 0;
+            csvContent += `${idStr},${category},${name},${nik},${phone},${alamat},${cows}\n`;
+        };
+        
+        // Export currently filtered data
+        const searchInput = document.getElementById('search-anggota');
+        const q = searchInput ? searchInput.value.toLowerCase() : '';
+        const filterFn = m => {
+          if (!q) return true;
+          return (m.name && m.name.toLowerCase().includes(q)) || 
+                 (m.nik && String(m.nik).toLowerCase().includes(q)) || 
+                 (m.phone && String(m.phone).toLowerCase().includes(q)) ||
+                 (m.alamat && m.alamat.toLowerCase().includes(q));
+        };
+
+        allPenitipData.filter(filterFn).forEach(m => appendRow(m, 'Penitip Ternak'));
+        allPJData.filter(filterFn).forEach(m => appendRow(m, 'Penanggungjawab Ternak'));
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "data_anggota_mooos.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
       async function loadAnggota() {
         setLoading('tbody-semua', 'count-semua');
         setLoading('tbody-penitip', 'count-penitip');
@@ -278,19 +344,10 @@
             fetch(`${API}/penanggungjawab`)
           ]);
           if (!resP.ok) throw new Error('HTTP ' + resP.status);
-          const penitip = await resP.json();
-          const pj = resPJ.ok ? await resPJ.json() : [];
+          allPenitipData = await resP.json();
+          allPJData = resPJ.ok ? await resPJ.json() : [];
 
-          document.getElementById('tbody-semua').innerHTML = buildRowsPenitip(penitip) + buildRowsPJ(pj);
-          document.getElementById('tbody-penitip').innerHTML = buildRowsPenitip(penitip);
-          document.getElementById('tbody-pj').innerHTML = buildRowsPJ(pj);
-
-          const total = penitip.length + pj.length;
-          document.getElementById('count-semua').textContent = `Menampilkan ${total} anggota`;
-          document.getElementById('count-penitip').textContent = `Menampilkan ${penitip.length} anggota`;
-          document.getElementById('count-pj').textContent = `Menampilkan ${pj.length} penanggungjawab`;
-          document.getElementById('tab-count-semua').textContent = total;
-
+          renderData();
         } catch (err) {
           const errMsg = `<tr><td colspan="6" class="p-8 text-center text-sm text-red-500">⚠️ Gagal memuat data: ${err.message}. Pastikan backend berjalan di port 8000.</td></tr>`;
           ['tbody-semua','tbody-penitip','tbody-pj'].forEach(id => document.getElementById(id).innerHTML = errMsg);
@@ -298,7 +355,15 @@
         }
       }
 
-      document.addEventListener('DOMContentLoaded', loadAnggota);
+      document.addEventListener('DOMContentLoaded', () => {
+        loadAnggota();
+        const searchInput = document.getElementById('search-anggota');
+        if (searchInput) {
+          searchInput.addEventListener('input', (e) => {
+            renderData(e.target.value);
+          });
+        }
+      });
     </script>
   </body>
 </html>

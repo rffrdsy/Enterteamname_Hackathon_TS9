@@ -5,6 +5,8 @@ import sqlite3
 import uvicorn
 import os
 import mimetypes
+import qrcode
+from io import BytesIO
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -54,7 +56,8 @@ from config import (
     AXEL_ID,
     ELISA_ID,
     RAFIF_ID,
-    BARN_TELEGRAM_IDS
+    BARN_TELEGRAM_IDS,
+    BOT_USERNAME
 )
 
 from spk_generator import generate_spk_pdf
@@ -62,6 +65,10 @@ from spk_generator import generate_spk_pdf
 # Folder penyimpanan foto sapi
 FOTO_DIR = os.path.join(os.path.dirname(__file__), "foto_sapi")
 os.makedirs(FOTO_DIR, exist_ok=True)
+
+# Folder penyimpanan QR code sapi
+QR_DIR = os.path.join(os.path.dirname(__file__), "qr_sapi")
+os.makedirs(QR_DIR, exist_ok=True)
 
 app = FastAPI(title="Mooos API", version="1.0.0")
 
@@ -84,8 +91,13 @@ app.add_middleware(
 
 class CowRequest(BaseModel):
     cow_id: str
-    owner: str
-
+    owner: str = "Koperasi"
+    owner_id: Optional[int] = None
+    weight: Optional[float] = None
+    umur: Optional[str] = None
+    jenis: Optional[str] = None
+    tgl_masuk: Optional[str] = None
+    lactate_status: Optional[str] = None
 
 class SellCowRequest(BaseModel):
     cow_code: str
@@ -98,6 +110,7 @@ class UpdateCowDetail(BaseModel):
     deskripsi: Optional[str] = None
     lactate_status: Optional[str] = None
     litre_milked_today: Optional[float] = None
+    weight: Optional[float] = None
 
 
 class MemberRequest(BaseModel):
@@ -284,8 +297,14 @@ def new_cow(data: CowRequest):
     hash_id = uuid.uuid4().hex[:8]
     try:
         db_execute(
-            "INSERT INTO cows(cow_code, status, hash_id) VALUES (?, ?, ?)",
-            (data.cow_id, "LOOKING_FOR_CARETAKER", hash_id)
+            """INSERT INTO cows(
+                cow_code, status, hash_id, owner_id,
+                weight, umur, jenis, tgl_masuk, lactate_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                data.cow_id, "LOOKING_FOR_CARETAKER", hash_id, data.owner_id,
+                data.weight, data.umur, data.jenis, data.tgl_masuk, data.lactate_status
+            )
         )
     except sqlite3.IntegrityError:
         raise HTTPException(status_code=400, detail=f"Sapi dengan ID '{data.cow_id}' sudah ada.")
@@ -293,7 +312,34 @@ def new_cow(data: CowRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
     send_new_cow(data.cow_id, data.owner)
-    return {"message": "Sapi disimpan dan notifikasi dikirim", "cow_id": data.cow_id, "hash_id": hash_id}
+
+    # Generate QR code
+    qr_url = f"https://t.me/{BOT_USERNAME}?start=CONFIRM_{data.cow_id}_{hash_id}"
+    qr_img = qrcode.make(qr_url)
+    qr_path = os.path.join(QR_DIR, f"{data.cow_id}.png")
+    qr_img.save(qr_path)
+
+    return {
+        "message": "Sapi disimpan dan notifikasi dikirim",
+        "cow_id": data.cow_id,
+        "hash_id": hash_id,
+        "qr_url": f"http://localhost:8000/qr/{data.cow_id}"
+    }
+
+
+@app.get("/qr/{cow_code}")
+def get_qr_code(cow_code: str):
+    qr_path = os.path.join(QR_DIR, f"{cow_code}.png")
+    if not os.path.exists(qr_path):
+        # Generate on-the-fly if missing
+        row = db_fetch_one("SELECT hash_id FROM cows WHERE cow_code = ?", (cow_code,))
+        if not row:
+            raise HTTPException(status_code=404, detail="Sapi tidak ditemukan")
+        hash_id = row[0]
+        qr_url = f"https://t.me/{BOT_USERNAME}?start=CONFIRM_{cow_code}_{hash_id}"
+        qr_img = qrcode.make(qr_url)
+        qr_img.save(qr_path)
+    return FileResponse(qr_path, media_type="image/png")
 
 
 @app.get("/cows")
@@ -502,13 +548,24 @@ def update_cow_detail(cow_code: str, data: UpdateCowDetail):
         fields.append("lactate_status = ?"); values.append(data.lactate_status)
     if data.litre_milked_today is not None:
         fields.append("litre_milked_today = ?"); values.append(data.litre_milked_today)
+    if data.weight is not None:
+        fields.append("weight = ?"); values.append(data.weight)
 
     if not fields:
-        return {"message": "Tidak ada field yang diupdate."}
+        return {"message": "Tidak ada data yang diperbarui"}
 
     values.append(cow_code)
     db_execute(f"UPDATE cows SET {', '.join(fields)} WHERE cow_code = ?", tuple(values))
-    return {"message": "Detail sapi berhasil diperbarui.", "cow_code": cow_code}
+    return {"message": f"Detail sapi '{cow_code}' diperbarui"}
+
+
+@app.delete("/cows/{cow_code}")
+def delete_cow(cow_code: str):
+    if not db_fetch_one("SELECT id FROM cows WHERE cow_code = ?", (cow_code,)):
+        raise HTTPException(status_code=404, detail=f"Sapi '{cow_code}' tidak ditemukan.")
+    
+    db_execute("DELETE FROM cows WHERE cow_code = ?", (cow_code,))
+    return {"message": f"Sapi '{cow_code}' berhasil dihapus", "cow_code": cow_code}
 
 
 @app.post("/cows/{cow_code}/foto")

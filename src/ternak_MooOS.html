@@ -36,11 +36,18 @@
         <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6 space-y-6">
 
           <!-- Area Header -->
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Ternak</h1>
               <p class="text-sm text-gray-500 mt-1">Daftar lengkap dan status seluruh ternak sapi</p>
             </div>
+            <a href="tambah_ternak_MooOS.html" class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Tambah Ternak</span>
+            </a>
           </div>
 
           <!-- CARD UTAMA (Direktori Ternak) -->
@@ -378,6 +385,7 @@
 
     // ── Init ───────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', loadTernak);
+
   </script>
 </body>
 

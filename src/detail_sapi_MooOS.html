@@ -178,13 +178,18 @@
                   <!-- FOOTER ACTIONS -->
                   <div class="flex items-center gap-3 pt-6 mt-auto border-t border-gray-100">
                     <!-- Tombol Hapus (Kiri) -->
-                    <button class="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors focus:outline-none shrink-0 border border-red-200" title="Hapus Data">
+                    <button onclick="deleteCow()" class="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors focus:outline-none shrink-0 border border-red-200" title="Hapus Data">
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                     </button>
                     <!-- Tombol Edit (Tengah) -->
-                    <button class="flex-grow inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 transition-colors focus:outline-none">
+                    <button onclick="openEditModal()" class="flex-grow inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 transition-colors focus:outline-none">
                       Edit Data
                     </button>
+                    <!-- Tombol SPK Sapi -->
+                    <a id="btn-spk-sapi" href="#" style="display: none;" class="flex-grow inline-flex items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors focus:outline-none shadow-sm gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 18H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2h-5"/><path d="m21 22-8-8"/><path d="M13 22v-4a2 2 0 0 1 2-2h4"/></svg>
+                      Surat Jual (PDF)
+                    </a>
                     <!-- Tombol Jual Sapi (Kanan) -->
                     <button id="btn-jual-sapi" onclick="openModal()" class="flex-grow inline-flex items-center justify-center rounded-md bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none shadow-sm">
                       Jual Ternak
@@ -314,6 +319,7 @@
             <script>
               const API = 'http://localhost:8000';
               let cowCode = '';
+              let currentCowData = {};
 
               // Helper: status badge
               function getStatusBadge(status) {
@@ -347,6 +353,8 @@
                   if (!cowRes.ok) throw new Error('Data sapi tidak ditemukan');
                   const cow = await cowRes.json();
                   const allMembers = membersRes.ok ? await membersRes.json() : [];
+
+                  currentCowData = cow;
 
                   // All Penanggungjawab Ternak from members
                   const penanggungjawabList = allMembers.filter(m => m.role === 'Penanggungjawab Ternak');
@@ -416,6 +424,15 @@
                   } else {
                     btnJual.style.display = 'inline-flex';
                   }
+
+                  // SPK button visibility
+                  const btnSpk = document.getElementById('btn-spk-sapi');
+                  if (cow.status === 'SOLD') {
+                    btnSpk.href = `${API}/cows/${cowCode}/spk/pdf`;
+                    btnSpk.style.display = 'inline-flex';
+                  } else {
+                    btnSpk.style.display = 'none';
+                  }
                 } catch (err) {
                   console.error(err);
                   document.getElementById('cow-description').textContent = 'Gagal memuat data sapi: ' + err.message;
@@ -462,8 +479,124 @@
                 }
               }
 
+              async function deleteCow() {
+                  if(!confirm('Anda yakin ingin menghapus data sapi ini? Tindakan ini tidak dapat dibatalkan.')) return;
+                  try {
+                      const res = await fetch(`${API}/cows/${cowCode}`, { method: 'DELETE' });
+                      if(res.ok) {
+                          alert('Sapi berhasil dihapus.');
+                          window.location.href = 'ternak_MooOS.html';
+                      } else {
+                          const data = await res.json();
+                          alert(data.detail || 'Gagal menghapus sapi');
+                      }
+                  } catch(e) {
+                          alert('Error: ' + e.message);
+                  }
+              }
+
+              function openEditModal() {
+                  document.getElementById('edit-weight').value = currentCowData.weight || '';
+                  document.getElementById('edit-age').value = currentCowData.umur || '';
+                  document.getElementById('edit-breed').value = currentCowData.jenis || '';
+                  document.getElementById('edit-entry-date').value = currentCowData.tgl_masuk || '';
+                  document.getElementById('edit-lactate').value = currentCowData.lactate_status || 'Kering';
+                  document.getElementById('edit-milked').value = currentCowData.litre_milked_today || 0;
+                  
+                  document.getElementById('modal-edit').classList.remove('hidden');
+              }
+
+              function closeEditModal() {
+                  document.getElementById('modal-edit').classList.add('hidden');
+              }
+
+              async function submitEditCow(e) {
+                  e.preventDefault();
+                  const btn = e.submitter || document.querySelector('#edit-form button[type="submit"]');
+                  btn.disabled = true;
+                  btn.textContent = 'Menyimpan...';
+                  try {
+                      const payload = {
+                          weight: parseFloat(document.getElementById('edit-weight').value) || null,
+                          umur: document.getElementById('edit-age').value || null,
+                          jenis: document.getElementById('edit-breed').value || null,
+                          tgl_masuk: document.getElementById('edit-entry-date').value || null,
+                          lactate_status: document.getElementById('edit-lactate').value || null,
+                          litre_milked_today: parseFloat(document.getElementById('edit-milked').value) || 0
+                      };
+                      const res = await fetch(`${API}/cows/${cowCode}`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(payload)
+                      });
+                      if(res.ok) {
+                          alert('Data sapi berhasil diperbarui!');
+                          location.reload();
+                      } else {
+                          const data = await res.json();
+                          alert('Gagal: ' + (data.detail || 'Kesalahan server.'));
+                      }
+                  } catch(err) {
+                      alert('Error: ' + err.message);
+                  } finally {
+                      btn.disabled = false;
+                      btn.textContent = 'Simpan Perubahan';
+                  }
+              }
+
               document.addEventListener('DOMContentLoaded', loadCowDetail);
             </script>
+
+            <!-- Edit Modal HTML -->
+            <div id="modal-edit" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+              <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl ring-1 ring-black/5">
+                <div class="flex items-center justify-between border-b border-gray-100 p-6">
+                  <h3 class="text-lg font-semibold text-gray-900">Edit Data Sapi</h3>
+                  <button onclick="closeEditModal()" class="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
+                </div>
+                <form id="edit-form" class="p-6 overflow-y-auto max-h-[60vh]" onsubmit="submitEditCow(event)">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Berat (Kg)</label>
+                      <input type="number" step="0.1" id="edit-weight" class="w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 text-sm py-2 px-3 border outline-none transition-shadow">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Usia</label>
+                      <input type="text" id="edit-age" class="w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 text-sm py-2 px-3 border outline-none transition-shadow">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Jenis (Breed)</label>
+                      <input type="text" id="edit-breed" class="w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 text-sm py-2 px-3 border outline-none transition-shadow">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
+                      <input type="date" id="edit-entry-date" class="w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 text-sm py-2 px-3 border outline-none transition-shadow">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Status Laktasi</label>
+                      <select id="edit-lactate" class="w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 text-sm py-2 px-3 border outline-none transition-shadow bg-white">
+                        <option value="Kering">Kering</option>
+                        <option value="Laktasi Aktif">Laktasi Aktif</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Susu (L) Hari Ini</label>
+                      <input type="number" step="0.1" id="edit-milked" class="w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 text-sm py-2 px-3 border outline-none transition-shadow">
+                    </div>
+                  </div>
+                  <div class="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-6">
+                    <button type="button" onclick="closeEditModal()" class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none">
+                      Batal
+                    </button>
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm">
+                      Simpan Perubahan
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
 
           </div>
         </main>
